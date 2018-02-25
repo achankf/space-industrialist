@@ -4,11 +4,10 @@ import { Game, ISaveData, UpdateChannel } from "../game";
 import * as Model from "../model/model";
 import * as View from "../view/view";
 
-const GRID_SIZE = 300;
+const MIN_GRID_SIZE = 50;
+const MAX_GRID_SIZE = 300;
 const UI_INTERVAL = 17;
-const MIN_DRAG_DISTANCE = 100;
-
-type Event = JQuery.Event<HTMLCanvasElement, null>;
+const RADIUS = 3 / 10;
 
 export interface IMapViewAction {
     handleSelected(view: MapView, game: Game, coor: Model.CoorT): boolean;
@@ -34,10 +33,16 @@ const setup: IMapViewAction = {
     },
     handleZoom: () => false,
     getTexts: () => [
-        "Hello. Select a food-producing (green) planet to be your", "starting planet, then unpause the game (button in top-right corner).",
-        "After you're done, mouse over the user interface, like labels,", "buttons, tables, to see the tooltips about game concepts, especially",
-        "the market panel on colonized planets, which explains the game economics.",
-        "Feel free to click on any colored items on the map, as they are interactive."],
+        "Hello. Select a food-producing (green) planet to",
+        "be your starting planet, then unpause the game",
+        "(button in top-right corner). After you're done,",
+        "mouse over the user interface, like labels,",
+        "buttons, tables, to see the tooltips about game",
+        "concepts, especially the market panel on",
+        "colonized planets, which explains the game",
+        "economics. Feel free to click on any colored items",
+        "on the map, as they are interactive.",
+    ],
 };
 
 export interface IMapViewSaveData {
@@ -53,12 +58,10 @@ export class MapView implements View.Observer {
 
     // UI data
     private topLeft: [number, number] = [0, 0];
-    private gridSize = GRID_SIZE;
+    private gridSize = MIN_GRID_SIZE;
 
-    private dragPos?: [number, number];
     private currentAction?: IMapViewAction;
     private cachedGrid: HTMLCanvasElement;
-    private isDragging = false;
     private pid?: number;
 
     constructor(game: Game, saveData?: ISaveData) {
@@ -69,13 +72,31 @@ export class MapView implements View.Observer {
             .empty()
             .append(this.view);
 
+        $(this.view).attr("id", "map");
+
+        const gesture = new Hammer.Manager(this.view);
+        const double = new Hammer.Tap({ event: "doubletap", taps: 2 });
+        const single = new Hammer.Tap({ event: "singletap" });
+        const pan = new Hammer.Pan()
+            .set({ direction: Hammer.DIRECTION_ALL });
+        gesture.add([
+            new Hammer.Pinch(),
+            double,
+            single,
+            pan,
+        ]);
+        double.recognizeWith(single);
+        single.requireFailure(double);
+
+        // setup events
+        gesture.on("singletap", (e) => this.click(game, e));
+        gesture.on("doubletap", (e) => this.dblclick(game, e));
+        gesture.on("pinch", (e) => this.wheel(game, e));
+        gesture.on("pan", (e) => this.pan(game, e));
+
+        // mouse wheel event handled separately
         ($(this.view) as JQuery<HTMLCanvasElement>)
-            .attr("id", "map")
-            .mousedown(() => this.mousedown(game))
-            .contextmenu((e) => this.rclick(game, e))
-            .click((e) => this.click(game, e))
-            .dblclick((e) => this.dblclick(game, e))
-            .on("wheel", (e) => this.onwheel(game, e.originalEvent as WheelEvent));
+            .on("wheel", (e) => this.wheel(game, e.originalEvent as WheelEvent));
 
         if (saveData) {
             const mapViewSave = saveData.mapViewSave;
@@ -100,12 +121,6 @@ export class MapView implements View.Observer {
             gridSize: this.gridSize,
             hasSetup: this.currentAction === undefined,
         };
-    }
-
-    public loadSave(game: Game, saveData: IMapViewSaveData) {
-        this.topLeft = saveData.topLeft;
-        this.gridSize = saveData.gridSize;
-        game.queueUpdate(UpdateChannel.MapChange);
     }
 
     public setAction(action?: IMapViewAction) {
@@ -142,11 +157,6 @@ export class MapView implements View.Observer {
         ctx.drawImage(this.cachedGrid, 0, 0);
         ctx.drawImage(this.drawObjects(game), 0, 0);
         this.drawActionText(game);
-
-        if (this.dragPos) {
-            this.drawArrow(ctx, this.getVpCenter(), this.dragPos, "yellow");
-        }
-
     }
 
     private drawActionText(game: Game) {
@@ -160,14 +170,13 @@ export class MapView implements View.Observer {
         }
         ctx.save();
         ctx.beginPath();
-        ctx.strokeStyle = "gray";
+        ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "12px Arial";
+        ctx.font = "12pt sans-serif";
         let offset = 0;
         for (const text of this.currentAction.getTexts(this, game)) {
-            ctx.strokeText(text, Math.ceil(this.view.width / 2), Math.ceil(this.view.height / 2) + offset);
-            ctx.fill();
+            ctx.fillText(text, Math.ceil(this.view.width / 2), Math.ceil(this.view.height / 2) + offset);
             offset += 17;
         }
         ctx.restore();
@@ -236,7 +245,7 @@ export class MapView implements View.Observer {
             // draw planet symbols (colored circles)
             ctx.fillStyle = "yellow";
             ctx.strokeStyle = "yellow";
-            const radius = 10;
+            const radius = RADIUS * this.gridSize;
 
             const drawPlanetCircle = (color: string, resource: Model.RawMaterial) => {
                 const planetByResource = allPlanets.get(resource);
@@ -261,14 +270,15 @@ export class MapView implements View.Observer {
             ctx.restore();
 
             // draw ids
-            ctx.strokeStyle = "yellow";
+            ctx.fillStyle = "yellow";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
+            const fontSize = Math.ceil(RADIUS * this.gridSize);
+            ctx.font = `${fontSize}px sans-serif`;
             for (const [planet, coor] of planetArray) {
                 const [vpX, vpY] = this.toVpCoor(coor);
                 ctx.beginPath();
-                ctx.strokeText(`${planet.id}`, vpX, vpY);
-                ctx.stroke();
+                ctx.fillText(`${planet.id}`, vpX, vpY);
             }
             ctx.restore();
 
@@ -341,7 +351,7 @@ export class MapView implements View.Observer {
 
         ctx.save();
         ctx.lineWidth = 1;
-        ctx.strokeStyle = "#111111";
+        ctx.strokeStyle = "#494949";
 
         const gridSize = this.gridSize;
 
@@ -371,27 +381,31 @@ export class MapView implements View.Observer {
         return canvas;
     }
 
+    // helper function behind the event handlers
     private panTo(game: Game, vpFrom: [number, number], vpTo: [number, number]) {
+        this.stopAction();
         const from = this.toGameCoor(vpFrom);
         const to = this.toGameCoor(vpTo);
         const offset = Algo.subtract2D(from, to);
         let distance = Algo.norm2D(offset);
         const pid = setInterval(() => {
-            const speed = distance * 0.01;
+            const speed = distance * 0.02;
+            let final;
             if (speed < 0.01 / this.gridSize) {
                 clearInterval(pid);
-                const proj = Algo.project2D(offset, distance);
-                this.topLeft = Algo.sum2D(this.topLeft, proj);
+                final = distance;
             } else {
-                const proj = Algo.project2D(offset, speed);
-                this.topLeft = Algo.sum2D(this.topLeft, proj);
+                final = speed;
                 distance -= speed;
             }
+            const proj = Algo.project2D(offset, final);
+            this.topLeft = Algo.sum2D(this.topLeft, proj);
             game.queueUpdate(UpdateChannel.MapChange);
         });
         return pid;
     }
 
+    /*
     // https://stackoverflow.com/a/16027466
     private drawArrow(ctx: CanvasRenderingContext2D, from: [number, number], to: [number, number], color: string) {
         const [x, y] = Algo.subtract2D(to, from);
@@ -412,6 +426,7 @@ export class MapView implements View.Observer {
         ctx.fill();
         ctx.restore();
     }
+    */
 
     private drawTriangle(ctx: CanvasRenderingContext2D) {
         ctx.moveTo(0, 0);
@@ -427,119 +442,59 @@ export class MapView implements View.Observer {
         }
     }
 
-    private mousedown(game: Game) {
-        this.stopAction();
-
-        const downPos = this.getVpCenter(); // [e.clientX!, e.clientY!] as [number, number];
-
-        let speed = 1;
-        let isMouseup = false;
-
-        this.stopAction();
-
-        // keep panning the map until mouseup
-        this.pid = setInterval(() => {
-            if (this.dragPos) {
-                const offset = Algo.subtract2D(downPos, this.dragPos);
-                const vpDistance = Algo.norm2D(offset);
-                if (vpDistance > MIN_DRAG_DISTANCE) {
-                    const gameDistance = vpDistance / this.gridSize;
-                    // translate by 2% of game distance of the drag path, times speed
-                    const proj = Algo.project2D(offset, gameDistance * 0.02 * speed);
-                    this.topLeft = Algo.sum2D(this.topLeft, proj);
-                }
-            }
-
-            // slowly & smoothly slow down to a halt
-            if (this.pid !== undefined && isMouseup) {
-                speed /= 1.1;
-                if (speed < 0.1) {
-                    clearInterval(this.pid);
-                    this.pid = undefined;
-                }
-            }
-
-            game.queueUpdate(UpdateChannel.MapChange);
-
-        }, UI_INTERVAL);
-        $(document).mouseup(() => {
-            isMouseup = true;
-            this.dragPos = undefined;
-            this.isDragging = false;
-            $(document)
-                .off("mouseup")
-                .off("mousemove");
-        }).mousemove((eInner) => {
-            this.isDragging = true;
-            this.dragPos = [eInner.clientX, eInner.clientY] as [number, number];
-        });
+    private pan(game: Game, e: HammerInput) {
+        this.pid = this.panTo(game, this.getVpCenter(), Algo.sum2D(this.getVpCenter(), [e.deltaX, e.deltaY]));
     }
 
-    private getClickedObjects(game: Game, e: Event) {
+    private click(game: Game, e: HammerInput) {
         const galaxy = game.galaxy;
-        const coor = [e.clientX, e.clientY] as [number, number];
+        const bb = e.target.getBoundingClientRect();
+        const coor = [
+            e.center.x - bb.left,
+            e.center.y - bb.top,
+        ] as [number, number];
         const gameCoor = this.toGameCoor(coor);
-        const radius = 10 / this.gridSize;
-        return galaxy.searchNearbyObjs(gameCoor, radius);
-    }
 
-    private rclick(game: Game, e: Event) {
-        const nearbyObjs = this
-            .getClickedObjects(game, e)
-            .toArray();
-        if (nearbyObjs.length === 1) {
-            const obj = nearbyObjs[0] as Model.ILocatable;
-            switch (obj.kind) {
-                case Model.MapDataKind.Planet:
-                case Model.MapDataKind.Fleet:
-                    console.log(obj.id);
-            }
-        }
-    }
-
-    private click(game: Game, e: Event) {
-        if (!this.isDragging) {
-
-            const coor = [e.clientX, e.clientY] as [number, number];
-            const gameCoor = this.toGameCoor(coor);
-
-            if (this.currentAction) {
-                this.currentAction.handleSelected(this, game, gameCoor);
-            } else {
-                const nearbyObjs = this.getClickedObjects(game, e).toArray();
-                switch (nearbyObjs.length) {
-                    case 0: break;
-                    case 1: {
-                        const obj = nearbyObjs[0];
-                        View.SelectView.createSingle(game, obj);
-                        break;
-                    }
-                    default: {
-                        game.addClosable(new View.SelectView(game, nearbyObjs));
-                        break;
-                    }
+        if (this.currentAction) {
+            this.currentAction.handleSelected(this, game, gameCoor);
+        } else {
+            const nearbyObjs = galaxy
+                .searchNearbyObjs(gameCoor, RADIUS)
+                .toArray();
+            switch (nearbyObjs.length) {
+                case 0: break;
+                case 1: {
+                    const obj = nearbyObjs[0];
+                    View.SelectView.createSingle(game, obj);
+                    break;
+                }
+                default: {
+                    game.addClosable(new View.SelectView(game, nearbyObjs));
+                    break;
                 }
             }
         }
-        this.isDragging = false;
     }
 
-    private dblclick(game: Game, e: Event) {
-        this.stopAction();
-        const coor = [e.clientX, e.clientY] as [number, number];
+    private dblclick(game: Game, e: HammerInput) {
+        const bb = e.target.getBoundingClientRect();
+        const coor = [
+            e.center.x - bb.left,
+            e.center.y - bb.top,
+        ] as [number, number];
         this.pid = this.panTo(game, this.getVpCenter(), coor);
     }
 
-    private onwheel(game: Game, e: WheelEvent) {
+    private wheel(game: Game, e: WheelEvent | HammerInput) {
         this.stopAction();
         const isZoomingIn = e.deltaY < 0;
         const centerCoor = this.getCenter();
         let zoomSpeed = 10;
         this.pid = setInterval(() => {
             if (isZoomingIn) {
-                this.gridSize = Math.min(GRID_SIZE * 5, this.gridSize + zoomSpeed);
+                this.gridSize = Math.min(MAX_GRID_SIZE, this.gridSize + zoomSpeed);
             } else {
-                this.gridSize = Math.max(50, this.gridSize - zoomSpeed);
+                this.gridSize = Math.max(MIN_GRID_SIZE, this.gridSize - zoomSpeed);
             }
             this.topLeft = this.centerVp(this.toVpCoor(centerCoor));
 

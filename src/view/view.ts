@@ -32,6 +32,35 @@ export function makeDraggable(view: HTMLElement, e: Event) {
         left: e.clientX! - pos.left,
     };
 
+    const gesture = new Hammer.Manager(view);
+    const pan = new Hammer.Pan()
+        .set({ direction: Hammer.DIRECTION_ALL });
+    gesture.add(pan);
+    gesture.on("pan", (eInner) => {
+        console.log(eInner.type);
+        let [newY, newX] = [
+            eInner.center.y - clickPosDiff.top,
+            eInner.center.x - clickPosDiff.left,
+        ] as [number, number];
+        // let [newY, newX] = [eInner.clientY! - clickPosDiff.top, eInner.clientX! - clickPosDiff.left];
+        if (newX < 0) {
+            newX = 0;
+        }
+        const maxX = $(document.body).width()! - $ele.innerWidth()!;
+        if (newX > maxX) {
+            newX = maxX;
+        }
+        if (newY < 0) {
+            newY = 0;
+        }
+        const maxY = $(document.body).height()! - $ele.innerHeight()!;
+        if (newY > maxY) {
+            newY = maxY;
+        }
+        $ele.offset({ top: newY, left: newX });
+    });
+
+    /*
     $(document)
         .mouseup(() => {
             suspendDraggable();
@@ -54,6 +83,7 @@ export function makeDraggable(view: HTMLElement, e: Event) {
             }
             $ele.offset({ top: newY, left: newX });
         });
+        */
 }
 
 export function suspendDraggable() {

@@ -16,8 +16,10 @@
     "author": "Alfred Chan <alfred8844@gmail.com>",
     "license": "ISC",
     "devDependencies": {
+        "@types/hammerjs": "^2.0.35",
         "@types/jquery": "^3.3.0",
         "dexie": "^2.0.1",
+        "hammerjs": "^2.0.8",
         "immutable": "^4.0.0-rc.9",
         "ts-loader": "^3.5.0",
         "typescript": "^2.7.2",

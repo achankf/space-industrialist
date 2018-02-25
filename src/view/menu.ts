@@ -22,7 +22,7 @@ export class Menu implements View.Observer {
             const money = galaxy.getMoney();
             $("#cash")
                 .css("color", money >= 0 ? "green" : "red")
-                .text(money.toFixed(2));
+                .text(`$${money.toFixed(2)}`);
             $("#colonist").text(galaxy.getNumColonists().toFixed(2));
             $("#trader").text(galaxy.getNumUnusedTraders().toFixed(2));
             $("#fast").prop("disabled", !game.canFastForward());

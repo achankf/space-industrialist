@@ -571,10 +571,8 @@ interface IMarketRow {
     product: Model.Product;
     price: number;
     qty: number;
-    demand: number;
     globalDemands: number;
     globalProdCap: number;
-    globalSupply: number;
 }
 
 class MarketPanel implements View.Observer {
@@ -595,10 +593,8 @@ class MarketPanel implements View.Observer {
             }],
             ["Price", (rowA, rowB) => rowA.price - rowB.price],
             ["Qty", (rowA, rowB) => rowA.qty - rowB.qty],
-            ["Local Demand", (rowA, rowB) => rowA.demand - rowB.demand],
             ["Galactic Demand", (rowA, rowB) => rowA.globalDemands - rowB.globalDemands],
             ["Galactic ProdCap", (rowA, rowB) => rowA.globalProdCap - rowB.globalProdCap],
-            ["Galactic Supply", (rowA, rowB) => rowA.globalSupply - rowB.globalSupply],
         ], () => this.update(game));
 
         $(view)
@@ -638,10 +634,8 @@ Finally, you want to overproduce goods that are used to maintain civilian & indu
                 Model.Product[row.product],
                 row.price.toFixed(2),
                 row.qty,
-                row.demand,
                 row.globalDemands,
                 row.globalProdCap,
-                row.globalSupply,
             ]);
     }
 }
