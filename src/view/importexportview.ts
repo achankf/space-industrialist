@@ -1,6 +1,11 @@
 import { Game, ISaveData } from "../game";
 import * as View from "./view";
 
+declare class LZString {
+    public static compressToBase64(input: string): string;
+    public static decompressFromBase64(input: string): string;
+}
+
 function toSave(game: Game) {
     const json = JSON.stringify(game.serialize());
     const withLen = JSON.stringify({
