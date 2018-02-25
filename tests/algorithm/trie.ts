@@ -1,4 +1,4 @@
-import { Trie, TupleMap } from "../../algorithm/trie.js";
+import { Trie, TupleMap } from "../../src/algorithm/trie";
 
 const input1: Array<[any[], number]> = [
     [[1], 2],

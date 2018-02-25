@@ -1,4 +1,4 @@
-import * as Algo from "./algorithm.js";
+import * as Algo from "./algorithm";
 
 export class MinHeap<T> {
 

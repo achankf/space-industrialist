@@ -1,90 +1,57 @@
-import * as Algo from "../algorithm/algorithm.js";
-import * as Model from "./model.js";
-import { Product } from "./model.js";
+import * as Model from "./model";
+import { Product } from "./product";
 
 const BASE_YIELD = 10;
 const MAX_OP_PRODUCTS = 10;
+const MIN_OP_EFF = 0.1;
+const REMAIN_CHANGE_EFF_FACTOR = 0.8; // i.e. 20% eff loss when upgrading/down-sizing industrial complex
+const BASE_FIXED_COST = 0.3;
+const MIN_FIXED_COST = 0.03;
+const FIXED_COST_OFFSET = BASE_FIXED_COST - MIN_FIXED_COST;
+console.assert(FIXED_COST_OFFSET > 0);
 
-export class Industry implements Model.IProducer {
+const BASE_POWER_USAGE = 10;
 
-    public static getDemandProducts(productType: Model.Product): Array<Set<Product>> {
-        switch (productType) {
-            case Product.Crop:
-            case Product.Metal:
-            case Product.Gem:
-            case Product.Fuel:
-                return [];
-            case Product.Food:
-                return [new Set([Product.Crop])];
-            case Product.Drink:
-                return [new Set([Product.Crop])];
-            case Product.Apparel:
-                return [new Set([Product.Fiber])];
-            case Product.Medicine:
-                return [new Set([Product.Chemical])];
-            case Product.Fiber:
-                return [new Set([Product.Crop])];
-            case Product.Chemical:
-                return [new Set([
-                    Product.Crop,
-                    Product.Metal,
-                    Product.Gem,
-                    Product.Fuel,
-                ])];
-            case Product.Circuit:
-                return [new Set([Product.Metal])];
-            case Product.Computer:
-                return [new Set([Product.Circuit])];
-            case Product.Accessory:
-                return [new Set([Product.Gem])];
-            case Product.Furniture:
-                return [new Set([Product.Fiber])];
-            case Product.Gadget:
-                return [new Set([Product.Computer])];
-            case Product.Vehicle:
-                return [new Set([Product.Metal])];
-            case Product.Concrete:
-                return [new Set([Product.Metal])];
-            case Product.Machine:
-                return [
-                    new Set([Product.Metal]),
-                    new Set([Product.Computer]),
-                ];
-            case Product.Tool:
-                return [new Set([Product.Metal])];
-            case Product.Supply:
-                return [
-                    new Set([Product.Food]),
-                    new Set([Product.Drink]),
-                    new Set([Product.Apparel]),
-                    new Set([Product.Medicine]),
-                ];
-            default:
-                // throw new Error("not handled");
-                return [];
-        }
+// bonus production modifiers
+const OP_FACTOR_BONUS = 4;
+const ENERGY_BONUS = 4;
+
+export class Industry {
+
+    public static getDemandProducts(productType: Product) {
+        return Model.DEMAND_PRODUCTS[productType];
     }
 
-    private operationalEff = 0; // 0 to 1
-    private runningEff = 0; // 0 to 1
+    public static getFlatDemandProducts(productType: Product) {
+        return Model.FLAT_DEMAND_PRODUCTS[productType];
+    }
 
     constructor(
         public readonly id: number,
         public readonly productType: Product,
-        public readonly home: Model.Habitat,
-        private inventory: Model.Inventory,
+        public readonly colony: Model.Colony,
         private scale = 1,
+        private operationalEff = MIN_OP_EFF, // 0.1 to 1
     ) { }
 
+    public serialize(): Model.IIndustry {
+        return {
+            id: this.id,
+            productType: this.productType,
+            colonyId: this.colony.id,
+            scale: this.scale,
+            operationalEff: this.operationalEff,
+        };
+    }
+
     public upgrade() {
-        const prev = this.scale;
         ++this.scale;
-        this.operationalEff = this.operationalEff * prev / this.scale;
-        this.runningEff = this.runningEff * prev / this.scale;
+        this.operationalEff = Math.max(MIN_OP_EFF, REMAIN_CHANGE_EFF_FACTOR * this.operationalEff);
     }
 
     public downSize() {
-        this.scale = Math.max(1, this.scale + 1);
+        this.scale = Math.max(1, this.scale - 1);
+        this.operationalEff = Math.max(MIN_OP_EFF, REMAIN_CHANGE_EFF_FACTOR * this.operationalEff);
     }
 
     public getScale() {
@@ -95,110 +62,114 @@ export class Industry implements Model.IProducer {
 
         const isRunProd = this.isRunProd(galaxy);
 
-        const companyInventory = this.inventory;
+        const playerInventory = this.colony.getPlayerInventory();
 
+        let numProduced = 0;
         if (isRunProd) {
-            this.produce(galaxy, companyInventory);
-            // bonus efficiency for producing goods
-            this.runningEff = Math.min(1, this.runningEff + 0.0002);
-        } else {
-            // penalty for not producing goods
-            this.runningEff = Math.min(1, this.runningEff + 0.0001);
+            numProduced = this.produce(galaxy, playerInventory);
         }
 
-        this.updateModifers(galaxy, isRunProd, companyInventory);
+        numProduced = Math.max(1, numProduced);
+        const costPerUnit = this.getCostPerUnit();
+        const prodCost = costPerUnit * numProduced;
+        const energyCost = this.usedEnergy(galaxy) + this.colony.getEnergyPrice(galaxy);
+
+        galaxy.withdraw(prodCost + energyCost);
+
+        this.updateModifers(isRunProd, playerInventory);
     }
 
-    public getOpDemand(galaxy: Model.Galaxy): Model.IOpDemand[] {
+    public getCostPerUnit() {
+        const costReduction = 1 - this.operationalEff;
+        console.assert(costReduction >= 0 && costReduction <= 1);
+        return MIN_FIXED_COST + FIXED_COST_OFFSET * costReduction;
+    }
+
+    public usedEnergy(galaxy: Model.Galaxy) {
+        return this.getPowerUsage() * this.colony.getPowerUsageEff(galaxy);
+    }
+
+    public getOpDemand(): Model.IOpDemand {
+        const qty = MAX_OP_PRODUCTS * this.scale;
         switch (this.productType) {
             case Product.Crop:
             case Product.Metal:
             case Product.Gem:
             case Product.Fuel:
-                return [{
+                return {
                     neededKinds: new Set([Product.Tool]),
-                    qty: MAX_OP_PRODUCTS,
-                    modifierKind: Model.IndustryModifier.OperationalBonus,
-                }];
+                    qty,
+                };
             default: // post-processing industries
-                return [{
+                return {
                     neededKinds: new Set([Product.Machine]),
-                    qty: MAX_OP_PRODUCTS,
-                    modifierKind: Model.IndustryModifier.OperationalBonus,
-                }];
+                    qty,
+                };
         }
     }
 
     public prodCap(galaxy: Model.Galaxy) {
-        const operationalFactor = this.operationalEff * 10;
-        const runningBonusYield = 1 + this.runningEff;
-        const baseProdCap = Math.pow(BASE_YIELD, runningBonusYield);
-        return Math.max(1, this.scale * Math.ceil(baseProdCap * operationalFactor));
-    }
-
-    public getRunningEff() {
-        return this.runningEff;
+        const operationalFactor = 1 + this.operationalEff * OP_FACTOR_BONUS;
+        const energyBonus = 1 + this.colony.getPowerUsageEff(galaxy) * ENERGY_BONUS;
+        return Math.max(1, Math.ceil(this.scale * BASE_YIELD * operationalFactor * energyBonus));
     }
 
     public getOperationalEff() {
         return this.operationalEff;
     }
 
+    public getPowerUsage() {
+        return this.getScale() * BASE_POWER_USAGE;
+    }
+
     private isRunProd(galaxy: Model.Galaxy) {
         const productType = this.productType;
-        const demandQty = galaxy.getGalacticDemands(productType);
-        const supplyQty = galaxy.getGalacticSupplies(productType);
-        const inStock = this.inventory.getQty(this.productType);
+        const demandQty = 10 * galaxy.getGalacticDemands(productType);
+        const supplyQty = this.colony.getSupply(productType);
+
+        const playerInventory = this.colony.getPlayerInventory();
+        const inStock = playerInventory.getQty(this.productType);
 
         // produce when there's excess demand
         return demandQty > inStock + supplyQty;
     }
 
-    private updateModifers(galaxy: Model.Galaxy, isRunProd: boolean, inventory: Model.Inventory) {
+    private updateModifers(isRunProd: boolean, inventory: Model.Inventory) {
 
-        for (const opDemand of this.getOpDemand(galaxy)) {
+        const opDemand = this.getOpDemand();
 
-            const consumed = inventory.consume(opDemand.neededKinds, opDemand.qty);
-            const ratio = consumed / opDemand.qty;
-            switch (opDemand.modifierKind) {
-                case Model.IndustryModifier.OperationalBonus:
-                    {
-                        if (!isRunProd || ratio < 0.5) {
-                            // not running production or too few tools, penatly
-                            this.operationalEff = Math.max(0.1, this.operationalEff - 0.0001);
-                        } else {
-                            const consumptionFactor = (ratio - 0.5) / 0.5;
-                            this.operationalEff = Math.min(1, this.operationalEff + 0.001 * consumptionFactor);
-                        }
-                    }
-                    break;
-                default:
-                    throw new Error("not handled");
-            }
+        const consumed = inventory.consume(opDemand.neededKinds, opDemand.qty);
+        const ratio = consumed / opDemand.qty;
+        if (!isRunProd || ratio < 0.5) {
+            // not running production or too few tools, penatly
+            this.operationalEff = Math.max(MIN_OP_EFF, this.operationalEff - 0.001);
+        } else {
+            const consumptionFactor = (ratio - 0.5) / 0.5;
+            this.operationalEff = Math.min(1, this.operationalEff + 0.01 * consumptionFactor);
         }
     }
 
     private produce(galaxy: Model.Galaxy, inventory: Model.Inventory) {
 
-        const demandProducts = Industry.getDemandProducts(this.productType);
+        const demandProducts = Industry.getFlatDemandProducts(this.productType);
         const prodCap = this.prodCap(galaxy);
 
-        if (demandProducts.length === 0) {
+        if (demandProducts.size === 0) {
             // no input requirement, produce full production capacity
             inventory.putGoods(this.productType, prodCap);
-        } else {
-            const produceQty = Math.min(
-                prodCap, // note: cannot produce greater than the production capacity
-                ...demandProducts
-                    .map((group) => Array
-                        .from(group)
-                        .reduce((acc, cur) => acc + inventory.getQty(cur), 0)));
-            for (const demandGroup of demandProducts) {
-                const consumed = inventory.consume(demandGroup, produceQty);
-                console.assert(consumed === produceQty);
-            }
-            inventory.putGoods(this.productType, produceQty);
+            return prodCap;
         }
+
+        const produceQty = Math.min(
+            prodCap, // note: cannot produce greater than the production capacity
+            ...demandProducts.map((product) => inventory.getQty(product)));
+        for (const demandGroup of Industry.getDemandProducts(this.productType)) {
+            const consumed = inventory.consume(demandGroup, produceQty);
+            console.assert(consumed === produceQty);
+        }
+        inventory.putGoods(this.productType, produceQty);
+
+        return produceQty;
     }
 
 }

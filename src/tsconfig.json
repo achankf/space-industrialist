@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ESNEXT",
+    "module": "es6",
+    "moduleResolution": "node",
+    "outDir": "../build/",
+    "strict": true,
+    "sourceMap": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictPropertyInitialization": false,
+  }
+}

@@ -25,8 +25,8 @@ export function equal2D([ax, ay]: [number, number], [bx, by]: [number, number]) 
 
 export function compare2D([ax, ay]: [number, number], [bx, by]: [number, number]) {
     if (ax < bx) { return -1; }
-    if (ay < by) { return 1; }
-    return bx - by;
+    if (ax > bx) { return 1; }
+    return ay - by;
 }
 
 export function subtract2D([ax, ay]: [number, number], [bx, by]: [number, number]): [number, number] {
@@ -59,6 +59,14 @@ export function determinant2D([ax, ay]: [number, number], [bx, by]: [number, num
     return ax * by - bx * ay;
 }
 
+export function isPointInRect([px, py]: [number, number], [ax, ay]: [number, number], [bx, by]: [number, number]) {
+    const maxX = Math.max(ax, bx);
+    const minX = Math.min(ax, bx);
+    const maxY = Math.max(ay, by);
+    const minY = Math.min(ay, by);
+    return px <= maxX && px >= minX && py <= maxY && py >= minY;
+}
+
 export const enum Intersection2D {
     None,
     Tangent,
@@ -66,7 +74,7 @@ export const enum Intersection2D {
 }
 
 /**
- * Test whether a given line segment intersects a circle.
+ * Test whether a given infinite line, defined by a & b, intersects a circle.
  * @param a a point in the line segment
  * @param b another point in the line segment
  * @param c the center of the target circle
@@ -75,15 +83,16 @@ export const enum Intersection2D {
  * @see http://mathworld.wolfram.com/Circle-LineIntersection.html
  */
 export function testLineCircleIntersect(a: [number, number], b: [number, number], c: [number, number], r: number) {
+
     // translate a and b by c, to simplify the problem to testing a line to a circle centered around the origin
     const ta = subtract2D(a, c);
     const tb = subtract2D(b, c);
     const dr = distance2D(a, b);
     const dr2 = dr * dr;
     const r2 = r * r;
-    const disc = determinant2D(a, b);
-    const disc2 = disc * disc;
-    const discriminant = r2 * dr2 - disc2;
+    const det = determinant2D(ta, tb);
+    const det2 = det * det;
+    const discriminant = r2 * dr2 - det2;
 
     if (discriminant < 0) {
         return Intersection2D.None;
@@ -92,4 +101,12 @@ export function testLineCircleIntersect(a: [number, number], b: [number, number]
     } else {
         return Intersection2D.Tangent;
     }
+}
+
+export function testLineSegmentCircleIntersect(a: [number, number], b: [number, number], c: [number, number], r: number) {
+    // for finite line segments, test whether the center is within the rectangle defined by a,b
+    if (!isPointInRect(c, a, b)) {
+        return Intersection2D.None;
+    }
+    return testLineCircleIntersect(a, b, c, r);
 }

@@ -1,11 +1,11 @@
-export * from "./minheap.js";
-export * from "./mymath.js";
-export * from "./trie.js";
-export * from "./bimap.js";
-export * from "./unionfind.js";
-export * from "./graph.js";
+export * from "./minheap";
+export * from "./mymath";
+export * from "./trie";
+export * from "./bimap";
+export * from "./unionfind";
+export * from "./graph";
 
-import { UnionFind } from "./unionfind.js";
+import * as Immutable from "immutable";
 
 export interface IRange {
     low: number;
@@ -223,35 +223,6 @@ export function binarySearchRange(target: number, r: IRange, toVal: (pivot: numb
     return low;
 }
 
-console.assert(lowerBound([], 12345, (x) => x) === 0);
-const arr1to5 = [1, 2, 3, 4, 5];
-console.assert(lowerBound(arr1to5, 0, (x) => x) === 0); // all items > target
-console.assert(lowerBound(arr1to5, 1, (x) => x) === 0);
-console.assert(lowerBound(arr1to5, 2, (x) => x) === 1);
-console.assert(lowerBound(arr1to5, 3, (x) => x) === 2);
-console.assert(lowerBound(arr1to5, 4, (x) => x) === 3);
-console.assert(lowerBound(arr1to5, 5, (x) => x) === 4);
-console.assert(lowerBound(arr1to5, 6, (x) => x) === 5); // all items < target
-console.assert(lowerBound(arr1to5, 999, (x) => x) === 5); // all items < target
-const dup = [-10, -6, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 5, 10];
-console.assert(lowerBound(dup, -6, (x) => x) === 1);
-console.assert(lowerBound(dup, 1, (x) => x) === 2);
-// in between gaps
-console.assert(lowerBound(dup, -7, (x) => x) === 1);
-console.assert(lowerBound(dup, -5, (x) => x) === 2);
-console.assert(lowerBound(dup, -4, (x) => x) === 2);
-console.assert(lowerBound(dup, -3, (x) => x) === 2);
-console.assert(lowerBound(dup, -2, (x) => x) === 2);
-console.assert(lowerBound(dup, -1, (x) => x) === 2);
-console.assert(lowerBound(dup, 0, (x) => x) === 2);
-console.assert(lowerBound(dup, 6, (x) => x) === 14);
-console.assert(lowerBound(dup, 7, (x) => x) === 14);
-console.assert(lowerBound(dup, 8, (x) => x) === 14);
-console.assert(lowerBound(dup, 9, (x) => x) === 14);
-// search duplicate items
-console.assert(lowerBound(dup, 2, (x) => x) === 3);
-console.assert(lowerBound(dup, 3, (x) => x) === 9);
-
 export function cmpStr(a: string, b: string) {
     if (a < b) {
         return -1;
@@ -384,7 +355,7 @@ export function* mapFilter<KeyT, ValT>(map: Map<KeyT, ValT>, pred: (val: ValT) =
     }
 }
 
-export function* combineIt<T>(...its: Array<IterableIterator<T> | T[]>) {
+export function* combineIt<T>(...its: Array<IterableIterator<T> | T[] | Set<T> | Immutable.Seq.Indexed<T>>) {
     for (const it of its) {
         for (const v of it) {
             yield v;
@@ -411,10 +382,6 @@ export function* uniq<T>(sortedVals: T[], isEq = (a: T, b: T) => a === b) {
     }
 }
 
-export function union<T>(...vals: T[]) {
-    return new Set<T>(vals);
-}
-
 export function group<T, U>(valFn: (t: T) => U, ...vals: T[]) {
     const ret = new Map<U, T[]>();
     for (const val of vals) {
@@ -424,10 +391,10 @@ export function group<T, U>(valFn: (t: T) => U, ...vals: T[]) {
     return ret;
 }
 
-export function partition<T>(arr: T[], filter: (val: T) => boolean) {
+export function partition<T>(arr: T[], pred: (val: T) => boolean) {
     return arr
         .reduce(([good, bad], cur) => {
-            if (filter(cur)) {
+            if (pred(cur)) {
                 good.push(cur);
             } else {
                 bad.push(cur);
@@ -504,7 +471,7 @@ export class Option<T> {
         );
     }
 
-    public match<U>(
+    public match(
         some: (val: T) => void,
         none = () => { /* empty */ },
     ) {

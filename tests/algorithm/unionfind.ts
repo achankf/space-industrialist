@@ -1,4 +1,4 @@
-import { UnionFind } from "../../algorithm/unionfind.js";
+import { UnionFind } from "../../src/algorithm/unionfind";
 
 const sets = new UnionFind(new Set([1, 2, 3, 4, 5]));
 

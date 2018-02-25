@@ -1,7 +1,7 @@
-import { Game, UpdateChannel } from "../game.js";
-import * as Model from "../model/model.js";
-import { MapDataKind } from "../model/model.js";
-import * as View from "../view/view.js";
+import { Game } from "../game";
+import * as Model from "../model/model";
+import { MapDataKind } from "../model/model";
+import * as View from "../view/view";
 
 export class SelectView implements View.Observer {
 
@@ -10,17 +10,10 @@ export class SelectView implements View.Observer {
             switch (obj.kind) {
                 case MapDataKind.Fleet:
                     return new View.FleetView(game, obj as Model.Fleet);
-                case MapDataKind.Shipyard:
-                    {
-                        const shipyard = obj as Model.Shipyard;
-                        const view = new View.PlanetView(game, shipyard.getLink());
-                        view.setShipyardPanel(game);
-                        return view;
-                    }
                 case MapDataKind.Planet:
                     return new View.PlanetView(game, obj as Model.Planet);
-                default:
-                    throw new Error("not handled");
+                case MapDataKind.RouteSegment:
+                    return new View.RouteSegmentView(game, obj as Model.IRouteSegment);
             }
         };
         game.addClosable(createHelper());
@@ -30,44 +23,46 @@ export class SelectView implements View.Observer {
 
     constructor(
         game: Game,
-        objs: Set<Model.IMapData>,
+        objs: Model.IMapData[],
     ) {
-        console.assert(objs.size > 0);
+        console.assert(objs.length > 0);
 
-        const title = View.$createTitlebar(game, this, `Open Which?`);
+        const $title = View.$createTitlebar(game, this, `Open Which?`);
 
-        const contentPanel = View.$createContentPanel();
+        const $contentPanel = View
+            .$addContentPanelClass()
+            .append(objs
+                .map((obj) => {
+                    const objLabel = $("<div>")
+                        .addClass("selectLabel");
+                    switch (obj.kind) {
+                        case MapDataKind.Fleet:
+                            objLabel
+                                .text(`Trader ${(obj as Model.Fleet).id}`)
+                                .css("color", "yellow");
+                            break;
+                        case MapDataKind.Planet:
+                            objLabel
+                                .text(`Planet ${(obj as Model.Planet).id}`);
+                            break;
+                        case MapDataKind.RouteSegment:
+                            objLabel
+                                .text(View.RouteSegmentView.routeTitleText(game, obj as Model.IRouteSegment))
+                                .css("color", "darkcyan");
+                            break;
+                    }
 
-        for (const obj of objs) {
-            let text;
-            switch (obj.kind) {
-                case MapDataKind.Fleet:
-                    text = "Fleet";
-                    break;
-                case MapDataKind.Shipyard:
-                    text = "Shipyard";
-                    break;
-                case MapDataKind.Planet:
-                    text = "Planet";
-                    break;
-                default:
-                    throw new Error("not handled");
-            }
-
-            $("<div>")
-                .text(text)
-                .click(() => this.clickSelect(game, obj))
-                .appendTo(contentPanel);
-        }
+                    return objLabel.click(() => this.clickSelect(game, obj));
+                }));
 
         View
             .$addPanelClass(this)
-            .append(title)
-            .append(contentPanel)
+            .append($title)
+            .append($contentPanel)
             .mousedown((e) => {
                 View.makeDraggable(this.view, e);
             })
-            .click((e) => {
+            .click(() => {
                 View.bringToFront(this.view);
             })
             .appendTo(document.body);

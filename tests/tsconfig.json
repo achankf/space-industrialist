@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ESNEXT",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../build/",
+    "strict": true,
+    "inlineSourceMap": true,
+  }
+}

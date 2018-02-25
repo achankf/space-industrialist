@@ -1,19 +1,21 @@
-import { Game, UpdateChannel } from "../game.js";
-import { IObserver } from "../observer.js";
-import { FleetView } from "./fleetview.js";
-import { OrganizationView } from "./organizationview.js";
-import { PlanetView } from "./planetview.js";
-import { SelectView } from "./selectview.js";
+import { Game, UpdateChannel } from "../game";
+import { IObserver } from "../observer";
+import { FleetView } from "./fleetview";
+import { ImportExportView } from "./importexportview";
+import { PlanetView } from "./planetview";
+import { RouteSegmentView } from "./routesegment";
+import { SelectView } from "./selectview";
 
-export * from "./fleetview.js";
-export * from "./mapview.js";
-export * from "./planetview.js";
-export * from "./selectview.js";
-export * from "./menu.js";
-export * from "./organizationview.js";
+export * from "./fleetview";
+export * from "./importexportview";
+export * from "./mapview";
+export * from "./menu";
+export * from "./planetview";
+export * from "./routesegment";
+export * from "./selectview";
 
 export type Observer = IObserver<Game, UpdateChannel>;
-export type ClosableView = FleetView | OrganizationView | PlanetView | SelectView;
+export type ClosableView = FleetView | ImportExportView | PlanetView | SelectView | RouteSegmentView;
 
 export function bringToFront(view: HTMLElement) {
     const $view = $(view);
@@ -32,9 +34,7 @@ export function makeDraggable(view: HTMLElement, e: Event) {
 
     $(document)
         .mouseup(() => {
-            $(document)
-                .off("mouseup")
-                .off("mousemove");
+            suspendDraggable();
         })
         .mousemove((eInner) => {
             let [newY, newX] = [eInner.clientY! - clickPosDiff.top, eInner.clientX! - clickPosDiff.left];
@@ -54,6 +54,12 @@ export function makeDraggable(view: HTMLElement, e: Event) {
             }
             $ele.offset({ top: newY, left: newX });
         });
+}
+
+export function suspendDraggable() {
+    $(document)
+        .off("mouseup")
+        .off("mousemove");
 }
 
 export function $createTitlebar(
@@ -79,6 +85,6 @@ export function $addPanelClass(view: ClosableView) {
     return $(view.view).addClass("panel");
 }
 
-export function $createContentPanel() {
-    return $("<div>").addClass("panel-content");
+export function $addContentPanelClass(element = document.createElement("div")) {
+    return $(element).addClass("panel-content");
 }

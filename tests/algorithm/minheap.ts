@@ -1,5 +1,5 @@
-import * as Algo from "../../algorithm/algorithm.js";
-import { MinHeap } from "../../algorithm/minheap.js";
+import * as Algo from "../../src/algorithm/algorithm";
+import { MinHeap } from "../../src/algorithm/minheap";
 
 export function allMinHeapTests() {
     const heapTest = (size: number) => {

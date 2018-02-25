@@ -1,4 +1,3 @@
-import * as Algo from "./algorithm/algorithm.js";
 
 export interface IObserver<ModelT, ChannelT> {
     update(model: ModelT, channels: Set<ChannelT>): void;
@@ -9,11 +8,10 @@ export class Subject<ModelT, ChannelT> {
     private observers = new Set<IObserver<ModelT, ChannelT>>();
     private updateSet = new Set<ChannelT>();
 
-    public subscribe(observer: IObserver<ModelT, ChannelT>) {
+    public subscribe(...observers: Array<IObserver<ModelT, ChannelT>>) {
+        console.assert(observers.every((o) => !this.observers.has(o)), "go fix caller: duplicate observable subscription");
 
-        console.assert(!this.observers.has(observer), "go fix caller: duplicate observable subscription");
-
-        this.observers.add(observer);
+        observers.forEach((o) => this.observers.add(o));
     }
 
     public unsubscribe(observer: IObserver<ModelT, ChannelT>) {
@@ -27,8 +25,13 @@ export class Subject<ModelT, ChannelT> {
 
     public update(model: ModelT) {
         for (const observable of this.observers) {
-            observable.update(model, new Set(this.updateSet));
+            observable.update(model, this.updateSet);
         }
+        this.updateSet.clear();
+    }
+
+    public clear() {
+        this.observers.clear();
         this.updateSet.clear();
     }
 }

@@ -1,0 +1,27 @@
+{
+    "name": "space-industrialist",
+    "version": "1.0.0",
+    "description": "A simple logistics game made in Typescript & HTML Canvas.",
+    "main": "./src/index.js",
+    "directories": {
+        "test": "tests"
+    },
+    "dependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build-dev": "webpack --watch --config webpack-dev.config.js",
+        "build": "webpack --config webpack.config.js"
+    },
+    "keywords": [],
+    "author": "Alfred Chan <alfred8844@gmail.com>",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/jquery": "^3.3.0",
+        "dexie": "^2.0.1",
+        "immutable": "^4.0.0-rc.9",
+        "ts-loader": "^3.5.0",
+        "typescript": "^2.7.2",
+        "uglifyjs-webpack-plugin": "^1.2.0",
+        "webpack": "^3.11.0"
+    }
+}

@@ -1,3 +1,4 @@
+import * as Immutable from "immutable";
 
 export enum Product {
 
@@ -26,9 +27,10 @@ export enum Product {
     Vehicle, // from metals
 
     // operational
-    Concrete, // construction, from metal
+    // Concrete, // construction, from metal
     Machine, // from metal and computers, used by industries
     Tool, // from metal, used for raw material production
+    /*
     Supply, // from common goods
 
     // spacecraft component points
@@ -46,64 +48,103 @@ export enum Product {
     Uniform, // from fibers
     Saber, // from metals & gems; think light saber
     Exoskeleton, // from chemicals & fibers
+    */
 }
-
-export type RawProduct = Product.Crop |
-    Product.Metal |
-    Product.Gem |
-    Product.Fuel
-    ;
-
-export type PostProduct = Product.Fiber |
-    Product.Chemical |
-    Product.Circuit |
-    Product.Computer |
-    Product.Food |
-    Product.Drink |
-    Product.Apparel |
-    Product.Medicine |
-    Product.Accessory |
-    Product.Furniture |
-    Product.Gadget |
-    Product.Vehicle |
-    Product.Concrete |
-    Product.Machine |
-    Product.Tool |
-    Product.Supply |
-    Product.Hull |
-    Product.Laser |
-    Product.Gun |
-    Product.Missile |
-    Product.Engine |
-    Product.Shield |
-    Product.Armor |
-    Product.Countermeasure |
-    Product.Rifle |
-    Product.Uniform |
-    Product.Saber |
-    Product.Exoskeleton
-    ;
 
 // https://github.com/Microsoft/TypeScript/issues/17198
 const productKeys = Object
     .keys(Product)
     .filter((k) => typeof Product[k as any] === "number");
 const productValues = productKeys
-    .map((k) => Number(Product[k as any]) as Product);
+    .map((k) => Number(Product[k as any]) as Product)
+    .sort((a, b) => a - b);
 
 export const NUM_PRODUCTS = productKeys.length;
 
 export function allProducts() {
-    return productValues;
+    return productValues.slice();
 }
 
-const ALL_RAW_MATERIALS = [
+export type RawMaterial = Product.Crop | Product.Metal | Product.Gem | Product.Fuel;
+export const RAW_MATERIALS: RawMaterial[] = [
     Product.Crop,
     Product.Metal,
     Product.Gem,
     Product.Fuel,
 ];
 
-export function getRawMaterials() {
-    return ALL_RAW_MATERIALS;
+export const RAW_MATERIALS_SET = new Set(RAW_MATERIALS);
+
+function getDemandProductsHelper(productType: Product) {
+    switch (productType) {
+        case Product.Crop:
+        case Product.Metal:
+        case Product.Gem:
+        case Product.Fuel:
+            return [];
+        case Product.Food:
+            return [new Set([Product.Crop])];
+        case Product.Drink:
+            return [new Set([Product.Crop])];
+        case Product.Apparel:
+            return [new Set([Product.Fiber])];
+        case Product.Medicine:
+            return [new Set([Product.Chemical])];
+        case Product.Fiber:
+            return [new Set([Product.Crop])];
+        case Product.Chemical:
+            return [new Set([
+                Product.Crop,
+                Product.Metal,
+                Product.Gem,
+                Product.Fuel,
+            ])];
+        case Product.Circuit:
+            return [new Set([Product.Metal])];
+        case Product.Computer:
+            return [new Set([Product.Circuit])];
+        case Product.Accessory:
+            return [new Set([Product.Gem])];
+        case Product.Furniture:
+            return [new Set([Product.Fiber])];
+        case Product.Gadget:
+            return [new Set([Product.Computer])];
+        case Product.Vehicle:
+            return [new Set([Product.Metal])];
+        case Product.Machine:
+            return [
+                new Set([Product.Metal]),
+                new Set([Product.Computer]),
+            ];
+        case Product.Tool:
+            return [new Set([Product.Metal])];
+    }
 }
+
+export const DEMAND_PRODUCTS = allProducts()
+    .map((x) => getDemandProductsHelper(x));
+
+export const FLAT_DEMAND_PRODUCTS = DEMAND_PRODUCTS
+    .map((x) => Immutable.Set<Product>().union(...x));
+
+export const SECONDARY_PRODUCTS = Immutable
+    .Set(allProducts()
+        .filter((product) => !RAW_MATERIALS_SET.has(product as RawMaterial) && // not raw materials
+            !FLAT_DEMAND_PRODUCTS[product]
+                .subtract(RAW_MATERIALS_SET)
+                .isEmpty())); // and requires non raw materials to produce (e.g. fibers -> apparels, where fiber needs crops to produce but apparels don't need any raw materials)
+
+function getOpDemand(product: Product): Product {
+    switch (product) {
+        case Product.Crop:
+        case Product.Metal:
+        case Product.Gem:
+        case Product.Fuel:
+            return Product.Tool;
+        default: // post-processing industries
+            return Product.Machine;
+    }
+}
+
+export const OP_PRODUCTS: Product[] = allProducts()
+    .map((x) => getOpDemand(x));

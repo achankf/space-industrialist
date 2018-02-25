@@ -1,26 +1,28 @@
-import * as Algo from "../algorithm/algorithm.js";
-import * as Model from "./model.js";
-
-const INVENTORY_FULL_SCALE = 0.8; // 0.8 is considered full
+import * as Immutable from "immutable";
+import * as Algo from "../algorithm/algorithm";
+import * as Model from "./model";
+import { Product } from "./product";
 
 export class Inventory {
 
-    private usedSpace = Algo.sum(...this.inventory.values());
-    private demandSrcs: Model.IProducer[] = [];
+    // either generated on the fly or restored from some source
+    private demandSrcs: Model.Industry[] = [];
+    private usedSpace = Algo.sum(...this.inventory);
 
     constructor(
-        private maxStorage: number = Infinity,
-
-        // either generated on the fly or restored from some source
-        private inventory = new Map<Model.Product, number>(),
+        public readonly id: number,
+        private maxStorage = Infinity,
+        private inventory = new Array<number>(Model.NUM_PRODUCTS).fill(0),
     ) {
         console.assert(this.usedSpace <= maxStorage);
     }
 
-    public setMaxStorage(maxStorage: number) {
-        console.assert(!Number.isNaN(maxStorage));
-        console.assert(maxStorage > 0); // allow Infinity
-        this.maxStorage = maxStorage;
+    public serialize(): Model.IInventory {
+        return {
+            id: this.id,
+            maxStorage: this.maxStorage,
+            inventory: this.inventory,
+        };
     }
 
     public getEmptySpace() {
@@ -34,36 +36,32 @@ export class Inventory {
     }
 
     public getQty(productType: Model.Product) {
-        const qty = Algo.getQty(this.inventory, productType);
+        const qty = this.inventory[productType];
         console.assert(qty >= 0);
         return qty;
     }
 
     public putGoods(productType: Model.Product, qty: number): number {
         console.assert(qty >= 0);
-        Number.isInteger(qty);
-        const inStock = Algo.getQty(this.inventory, productType);
+        console.assert(Number.isInteger(qty));
+        const inStock = this.inventory[productType];
         const newQty = Math.min(this.maxStorage - this.usedSpace, qty);
         const newTotal = inStock + newQty;
-        this.inventory.set(productType, newTotal);
+        this.inventory[productType] = newTotal;
         this.usedSpace += newQty;
         return newTotal;
     }
 
     public takeGoods(productType: Model.Product, qty: number): number {
         console.assert(qty >= 0);
-        Number.isInteger(qty);
+        console.assert(Number.isInteger(qty));
 
-        const remain = Algo.getQty(this.inventory, productType) - qty;
+        const remain = this.inventory[productType] - qty;
         if (remain < 0) {
             throw new Error("bug: responsibility of maintaining non-negative quantity goes to the caller");
         }
 
-        if (remain === 0) {
-            this.inventory.delete(productType);
-        } else {
-            this.inventory.set(productType, remain);
-        }
+        this.inventory[productType] = remain;
         this.usedSpace -= qty;
         return remain;
     }
@@ -73,38 +71,24 @@ export class Inventory {
         return this.maxStorage >= this.usedSpace + qty;
     }
 
-    public addDemandSrc(demandSrc: Model.IProducer) {
+    public addDemandSrc(demandSrc: Model.Industry) {
         this.demandSrcs.push(demandSrc);
     }
 
-    public isProducing(galaxy: Model.Galaxy, product: Model.Product) {
-        return this.demandSrcs
-            .filter((src) => src.productType === product)
-            .some((src) => src.prodCap(galaxy) > 0);
-    }
-
-    public getProdCap(galaxy: Model.Galaxy, product: Model.Product) {
-        return Algo.sum(...this.demandSrcs
-            .filter((src) => src.productType === product)
-            .map((src) => src.prodCap(galaxy)));
-    }
-
     public getDemand(galaxy: Model.Galaxy, product: Model.Product): number {
-        const demands = new Map<Model.Product, number>();
+        const demands = new Array<number>(Model.NUM_PRODUCTS).fill(0);
         for (const src of this.demandSrcs) {
 
             const prodCap = src.prodCap(galaxy);
 
-            const allDemands = Algo.combineIt(Array
-                .from(Model.Industry
-                    .getDemandProducts(src.productType))
+            const allDemands = Immutable
+                .Seq(Model.Industry.getDemandProducts(src.productType))
                 .map((x) => {
                     return {
                         neededKinds: x,
                         qty: prodCap,
                     };
-                }),
-                src.getOpDemand(galaxy));
+                }).concat(src.getOpDemand());
 
             for (const demand of allDemands) {
                 if (!demand.neededKinds.has(product)) {
@@ -115,30 +99,33 @@ export class Inventory {
                 for (const kind of demand.neededKinds) {
                     const qty = this.getQty(kind);
                     if (qty > need) {
-                        Algo.getAndSum(demands, kind, need);
+                        demands[kind] += need;
                         break;
                     } else {
                         need -= qty;
-                        Algo.getAndSum(demands, kind, qty);
+                        demands[kind] += qty;
                     }
                 }
                 console.assert(need >= 0);
                 // fill remaining needs with the target product
-                Algo.getAndSum(demands, product, need);
+                demands[product] += need;
             }
         }
 
-        return Algo.getQty(demands, product);
+        return demands[product];
     }
 
     public *getAllQty() {
-        for (const [product, qty] of this.inventory) {
-            // any entry must have qty > 0
-            yield [product, qty] as [Model.Product, number];
+        const it = this.inventory
+            .map((qty, idx) => [idx, qty] as [Product, number]);
+        for (const pair of it) {
+            // any entry must have qty >= 0
+            console.assert(pair[1] >= 0);
+            yield pair;
         }
     }
 
-    public consume(products: Set<Model.Product>, qty: number) {
+    public consume(products: Set<Model.Product> | Immutable.Set<Model.Product>, qty: number) {
         console.assert(qty >= 0);
 
         const sorted = Array

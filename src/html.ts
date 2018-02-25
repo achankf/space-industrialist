@@ -49,7 +49,7 @@ export class DrawTable<T> {
                     }))));
     }
 
-    public getTable() {
+    public $getTable() {
         return this.table;
     }
 

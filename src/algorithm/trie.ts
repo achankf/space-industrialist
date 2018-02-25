@@ -1,4 +1,4 @@
-import * as Algo from "./algorithm.js";
+import * as Algo from "./algorithm";
 
 export class OrderListSet<T> {
     private map = new OrderListMap<T, boolean>(this.cmp);
@@ -25,15 +25,11 @@ export class OrderListSet<T> {
     }
 
     public values() {
-        return Array
-            .from(this.map.entries())
-            .map(([x]) => x);
+        return this.map.keys();
     }
 
     public [Symbol.iterator]() {
-        return Array
-            .from(this.map.entries())
-            .map(([x]) => x);
+        return this.values();
     }
 }
 
@@ -61,6 +57,10 @@ export class OrderListMap<T, U> {
         return this.trie.delete(this.sortKey(key));
     }
 
+    public clear() {
+        this.trie = new Trie();
+    }
+
     public size() {
         return this.trie.size();
     }
@@ -73,20 +73,16 @@ export class OrderListMap<T, U> {
         return this.trie.entries();
     }
 
-    public *keys() {
-        for (const [key] of this.entries()) {
-            yield key;
-        }
+    public keys() {
+        return this.trie.keys() as IterableIterator<T[]>;
     }
 
-    public *values() {
-        for (const [, val] of this.entries()) {
-            yield val;
-        }
+    public values() {
+        return this.trie.values();
     }
 
     public getOrSet(defaultVal: () => U, ...key: T[]) {
-        return this.trie.getOrSet(key, defaultVal);
+        return this.trie.getOrSet(this.sortKey(key), defaultVal);
     }
 
     private sortKey(key: T[]) {
@@ -137,6 +133,14 @@ export class TupleMap<KeyT extends any[], ValT> {
         return this.trie.entries() as IterableIterator<[KeyT, ValT]>;
     }
 
+    public keys() {
+        return this.trie.keys() as IterableIterator<KeyT>;
+    }
+
+    public values() {
+        return this.trie.values();
+    }
+
     public getOrSet(key: KeyT, defaultVal: () => ValT) {
         return this.trie.getOrSet(key, defaultVal);
     }
@@ -146,13 +150,65 @@ export class TupleMap<KeyT extends any[], ValT> {
     }
 }
 
+export class TupleSet<KeyT extends any[]> {
+
+    private trie: Trie<boolean>;
+
+    constructor(
+        ...data: KeyT[],
+    ) {
+        this.trie = Trie.make(...data.map((x) => [x, true] as [KeyT, boolean]));
+    }
+
+    public clear() {
+        this.trie = new Trie();
+    }
+
+    public size() {
+        return this.trie.size();
+    }
+
+    public has(key: KeyT) {
+        return this.trie.get(key) !== undefined;
+    }
+
+    public add(key: KeyT) {
+        this.trie.set(key, true);
+        return this;
+    }
+
+    public delete(key: KeyT) {
+        return this.trie.delete(key);
+    }
+
+    public [Symbol.iterator]() {
+        return this.entries();
+    }
+
+    public entries() {
+        return this.values();
+    }
+
+    public keys() {
+        return this.trie.keys() as IterableIterator<KeyT>;
+    }
+
+    public values() {
+        return this.keys();
+    }
+
+    public getOrAdd(key: KeyT) {
+        return this.trie.getOrSet(key, () => true);
+    }
+}
+
 export class Trie<ValT> {
 
     public static make<V>(...list: Array<[any[], V]>) {
         return list
             .reduce((acc, [keyString, val]) => acc
                 .set(keyString, val),
-            new Trie<V>());
+                new Trie<V>());
     }
 
     private keyChar2: any;
@@ -286,13 +342,25 @@ export class Trie<ValT> {
         }
     }
 
+    public *keys() {
+        for (const [key] of this.entries()) {
+            yield key;
+        }
+    }
+
+    public *values() {
+        for (const [, val] of this.entries()) {
+            yield val;
+        }
+    }
+
     public *nextOrder() {
         for (const subTrie of this.next.values()) {
             yield [subTrie.keyChar(), subTrie] as [any, Trie<ValT>];
         }
     }
 
-    public traverse(key: any[], visit = (keyChar: any, node: Trie<ValT>) => { /* empty */ }) {
+    public traverse(key: any[], visit: (keyChar: any, node: Trie<ValT>) => void = () => { /* empty */ }) {
         let cur: Trie<ValT> = this;
 
         const isFound = key.every((keyChar) => {

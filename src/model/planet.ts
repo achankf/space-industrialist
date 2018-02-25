@@ -1,27 +1,31 @@
-import * as Model from "./model.js";
+import * as Model from "./model";
 
-export class Planet implements Model.IMapData {
+export class Planet implements Model.ILocatable {
 
-    public readonly isDockable = false;
-    public readonly isMapObject = true;
-    public readonly isCoor = false;
     public readonly kind = Model.MapDataKind.Planet;
 
     constructor(
         public readonly id: number,
-        public readonly resource: Model.Product,
-        private habitat?: Model.Habitat,
+        public readonly resource: Model.RawMaterial,
+        private colony?: Model.Colony,
     ) { }
 
-    public colonized(habitat: Model.Habitat) {
-        this.habitat = habitat;
+    public serialize(): Model.IPlanet {
+        return {
+            id: this.id,
+            resource: this.resource,
+        };
+    }
+
+    public colonized(colony: Model.Colony) {
+        this.colony = colony;
     }
 
     public getColony() {
-        return this.habitat;
+        return this.colony;
     }
 
     public isColonized() {
-        return this.habitat !== undefined;
+        return this.colony !== undefined;
     }
 }

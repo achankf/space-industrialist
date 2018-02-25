@@ -12,6 +12,11 @@ export class BiMap<T, U> {
         this.rightMap = new Map(data.map(([t, u]) => [u, t] as [U, T]));
     }
 
+    public size() {
+        console.assert(this.leftMap.size === this.rightMap.size);
+        return this.leftMap.size;
+    }
+
     public set(left: T, right: U) {
         this.leftMap.set(left, right);
         this.rightMap.set(right, left);
@@ -49,6 +54,14 @@ export class BiMap<T, U> {
 
     public rights() {
         return this.rightMap.keys();
+    }
+
+    public [Symbol.iterator]() {
+        return this.entries();
+    }
+
+    public entries() {
+        return this.leftMap.entries();
     }
 
     private delete(left: T, right: U) {

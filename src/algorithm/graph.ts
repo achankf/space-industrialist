@@ -1,5 +1,5 @@
-import * as Algo from "./algorithm.js";
-import { UnionFind } from "./unionfind.js";
+import * as Algo from "./algorithm";
+import { UnionFind } from "./unionfind";
 
 export type Graph<T> = Map<T, T[]>; // adjacency list
 
@@ -45,12 +45,10 @@ export function* breadthFirstTraversal<T, U>(
 export function* depthFirstTraversal<T, U>(
     root: T,
     neighbours: (vertex: T) => IterableIterator<T>,
-    key?: (vertex: T) => U,
 ): IterableIterator<[T, number]> {
 
     const workList: Array<[T, number]> = [[root, 0]];
     const visited = new Set<T | U>();
-    const keyit = key ? key : (me: T) => me;
 
     while (workList.length > 0) {
         const [cur, depth] = workList.pop()!;
@@ -147,7 +145,7 @@ export class FloydWarshall<T> {
                     next[i][j] ← next[i][k]
         */
         console.assert(graph !== undefined);
-        this.vertices = new Array(...graph.keys());
+        this.vertices = [...graph.keys()];
         this.verticesIdx = new Map(Array
             .from(this.vertices)
             .map((v, i) => [v, i] as [T, number]));
