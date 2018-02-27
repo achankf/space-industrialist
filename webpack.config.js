@@ -1,9 +1,8 @@
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
     entry: './src/index.ts',
-    devtool: "inline-source-map", // hosted on Github anyway
+    devtool: "inline-source-map",
     module: {
         rules: [{
             test: /\.ts?$/,
@@ -21,9 +20,4 @@ module.exports = {
         dexie: 'Dexie',
         immutable: 'Immutable',
     },
-    plugins: [
-        new UglifyJsPlugin({
-            sourceMap: true,
-        })
-    ],
 };

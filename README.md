@@ -7,8 +7,8 @@ This is a mini-game that is inspired by various good transport games, like the P
 To build the game, run	
 ~~~~
 npm install       # install build dependencies
-npm run build-dev # development version
-npm run build     # uglified version
+npm run build     # build the codes
+npm run watch     # build the codes in watch mode
 ~~~~
 
 # Example
