@@ -24,6 +24,9 @@ export class Subject<ModelT, ChannelT> {
     }
 
     public update(model: ModelT) {
+        if (this.updateSet.size === 0) {
+            return;
+        }
         for (const observable of this.observers) {
             observable.update(model, this.updateSet);
         }
