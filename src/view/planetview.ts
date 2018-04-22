@@ -383,7 +383,7 @@ class PlanetInfoPanel implements View.Observer {
                 .click(() => {
                     galaxy.colonizePlanet(planet, 1);
                     $(this).remove();
-                    this.game.queueUpdate(UpdateChannel.MapChange);
+                    this.game.queueUpdate(UpdateChannel.DataChange);
                 });
             rows.push($("<tr>")
                 .attr("title", "Spend 1 free colonist to colonize this planet. You can encourage growth from colonized planets.")

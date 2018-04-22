@@ -26,7 +26,7 @@ const setup: IMapViewAction = {
                 const colony = galaxy.colonizePlanet(planet, 10);
                 colony.expandPowerPlanet(galaxy);
                 view.setAction();
-                game.queueUpdate(UpdateChannel.MapChange);
+                game.queueUpdate(UpdateChannel.DataChange);
             }
         }
         return false;
