@@ -44,8 +44,9 @@ export class FleetView implements View.Observer {
 
     public update(game: Game, channels: Set<UpdateChannel>) {
 
-        if (!game.galaxy.exists(this.fleet)) {
+        if (!game.galaxyProxy.exists(this.fleet)) {
             game.close(this);
+            return;
         }
 
         this.contents.update(game, channels);
@@ -70,7 +71,7 @@ class RoutePanel implements View.Observer {
         readonly view: HTMLElement,
         private readonly fleet: Model.Fleet,
     ) {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         this.tableDrawer = new DrawTable<Model.Colony>([
             ["Place", undefined],
             ["Dest", undefined],
@@ -107,14 +108,14 @@ class RoutePanel implements View.Observer {
         this.observer = {
             update: () => {
                 $button.prop("disabled", fleet.isRetire());
-                $speedLabel.text(this.fleet.getSpeed(galaxy).toFixed(2));
+                $speedLabel.text(galaxy.getFleetSpeed(this.fleet).toFixed(2));
             },
         };
     }
 
     public update(game: Game, channels: Set<UpdateChannel>) {
 
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
 
         this.observer.update(game, channels);
 

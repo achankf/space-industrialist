@@ -192,14 +192,15 @@ export class Colony {
     }
 
     public getTotalPowerUsage(galaxy: Model.Galaxy) {
-        const indUsage = this.getIndustrialPowerUsage(galaxy);
+        const industrialUsage = this.getIndustrialPowerUsage(galaxy);
         const traderUsage = this.getTraderPowerUsage(galaxy);
         const civUsage = this.getCivilianPowerUsage();
-        return indUsage + traderUsage + civUsage;
+        const totalUsage = industrialUsage + traderUsage + civUsage;
+        return { industrialUsage, traderUsage, civUsage, totalUsage };
     }
 
     public getPowerUsageEff(galaxy: Model.Galaxy) {
-        const usage = this.getTotalPowerUsage(galaxy);
+        const { totalUsage: usage } = this.getTotalPowerUsage(galaxy);
         const output = this.getPowerOutput();
         if (usage === 0) {
             return output > 0 ? 0 : 1;
@@ -216,7 +217,7 @@ export class Colony {
     }
 
     public getEnergyPrice(galaxy: Model.Galaxy) {
-        const demand = this.getTotalPowerUsage(galaxy);
+        const { totalUsage: demand } = this.getTotalPowerUsage(galaxy);
         const supply = this.getPowerOutput();
         return Colony.estimatePrice(demand, supply, 1, Colony.basePrice(Model.Product.Fuel));
     }
@@ -295,7 +296,8 @@ export class Colony {
     }
 
     public canExpandPowerPlant(galaxy: Model.Galaxy) {
-        return 2 * this.getTotalPowerUsage(galaxy) > this.getMaxPowerPotential();
+        const { totalUsage } = this.getTotalPowerUsage(galaxy);
+        return 2 * totalUsage > this.getMaxPowerPotential();
     }
 
     public expandPowerPlanet(galaxy: Model.Galaxy) {

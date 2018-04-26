@@ -16,7 +16,7 @@ export class Menu implements View.Observer {
 
     public update(game: Game, channels: Set<UpdateChannel>) {
 
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
 
         if (channels.has(UpdateChannel.DataChange)) {
             const money = galaxy.getMoney();
@@ -71,7 +71,7 @@ export class Menu implements View.Observer {
             .click((e) => {
                 const isOk = e.ctrlKey || confirm(`Are you sure? This action costs $${Model.TRADER_COST}. (press ctrl while clicking the button suppresses this message)`);
                 if (isOk) {
-                    const galaxy = game.galaxy;
+                    const galaxy = game.galaxyProxy;
                     galaxy.addTrader();
                     galaxy.withdraw(Model.TRADER_COST);
                 }

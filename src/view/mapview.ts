@@ -17,14 +17,14 @@ export interface IMapViewAction {
 
 const setup: IMapViewAction = {
     handleSelected: (view: MapView, game: Game, coor: Model.CoorT) => {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const objs = galaxy.searchNearbyObjs(coor, 0.1).toArray();
         if (objs.length === 1) {
             const planet = objs[0] as Model.Planet;
             if (planet.kind === Model.MapDataKind.Planet &&
                 planet.resource === Model.Product.Crop) {
                 const colony = galaxy.colonizePlanet(planet, 10);
-                colony.expandPowerPlanet(galaxy);
+                galaxy.expandPowerPlant(colony);
                 view.setAction();
                 game.queueUpdate(UpdateChannel.DataChange);
             }
@@ -201,7 +201,7 @@ export class MapView implements View.Observer {
     }
 
     private drawObjects(game: Game) {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const [canvas, ctx] = this.getCanvasContext();
         canvas.width = document.body.clientWidth;
         canvas.height = document.body.clientHeight;
@@ -224,7 +224,7 @@ export class MapView implements View.Observer {
                 const [vpX, vpY] = this.toVpCoor(coor);
 
                 const fleet = obj as Model.Fleet;
-                const angle = fleet.getAngle(galaxy);
+                const angle = galaxy.getAngle(fleet);
                 ctx.save();
                 ctx.beginPath();
                 ctx.translate(vpX, vpY);
@@ -315,7 +315,7 @@ export class MapView implements View.Observer {
 
     private drawTradeRoutes(game: Game, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
 
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const tradeRoutes = galaxy.getTradeRoutes();
 
         ctx.save();
@@ -454,7 +454,7 @@ export class MapView implements View.Observer {
     }
 
     private click(game: Game, e: HammerInput) {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const bb = e.target.getBoundingClientRect();
         const coor = [
             e.center.x - bb.left,

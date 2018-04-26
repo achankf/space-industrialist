@@ -5,10 +5,10 @@ import * as View from "./view";
 export class RouteSegmentView implements View.Observer {
 
     public static routeTitleText(game: Game, route: Model.IRouteSegment) {
-        const galaxy = game.galaxy;
-        const fromObj = galaxy.getObj(route.from, Model.MapDataKind.Planet) as Model.Planet;
+        const galaxy = game.galaxyProxy;
+        const fromObj = galaxy.getPlanet(route.from) as Model.Planet;
         console.assert(fromObj !== undefined);
-        const toObj = galaxy.getObj(route.to, Model.MapDataKind.Planet) as Model.Planet;
+        const toObj = galaxy.getPlanet(route.to) as Model.Planet;
         console.assert(toObj !== undefined);
 
         if (fromObj.id < toObj.id) {
@@ -30,11 +30,11 @@ export class RouteSegmentView implements View.Observer {
         game: Game,
         private readonly route: Model.IRouteSegment,
     ) {
-        const galaxy = game.galaxy;
-        const fromObj = galaxy.getObj(route.from, Model.MapDataKind.Planet) as Model.Planet;
+        const galaxy = game.galaxyProxy;
+        const fromObj = galaxy.getPlanet(route.from) as Model.Planet;
         console.assert(fromObj !== undefined);
         console.assert(fromObj.isColonized());
-        const toObj = galaxy.getObj(route.to, Model.MapDataKind.Planet) as Model.Planet;
+        const toObj = galaxy.getPlanet(route.to) as Model.Planet;
         console.assert(toObj !== undefined);
         console.assert(toObj.isColonized());
 
@@ -58,7 +58,7 @@ export class RouteSegmentView implements View.Observer {
     }
 
     private layout(game: Game) {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const $title = View.$createTitlebar(game, this, RouteSegmentView.routeTitleText(game, this.route));
 
         const $numTraders = $("<span>");

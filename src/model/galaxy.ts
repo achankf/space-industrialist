@@ -412,7 +412,7 @@ export class Galaxy {
     public getScore() {
         console.assert(this.timestamp !== 0);
         const score = (this.money - STARTING_CAPITAL) / this.timestamp;
-        if (score < 0) {
+        if (score <= 0) {
             return 0;
         }
         return Math.round(score);

@@ -133,7 +133,7 @@ class IndustryPanel implements View.Observer {
 
     private layout(game: Game) {
         const colony = this.colony;
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const industries = galaxy.getIndustries(colony);
 
         const groups = new Map(Array
@@ -160,7 +160,7 @@ class IndustryPanel implements View.Observer {
 
     private *makeIndustryDivContainer(game: Game, industries: Map<Product, Model.Industry>, products: Product[]) {
 
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
 
         let showProducts;
         if (industries.size < 2) {
@@ -248,7 +248,7 @@ class IndustryPanel implements View.Observer {
             .click((e) => {
                 const isOk = e.ctrlKey || confirm(`Are you sure? This action costs $${Model.INDUSTRY_COST}, and will take up a building slot (max 2 per planet). (press ctrl while clicking the button suppresses this message)`);
                 if (isOk) {
-                    const galaxy = game.galaxy;
+                    const galaxy = game.galaxyProxy;
                     galaxy.addIndustry(product, this.colony);
                     galaxy.withdraw(Model.INDUSTRY_COST);
                     game.queueUpdate(UpdateChannel.RecreateIndustryLayout);
@@ -258,7 +258,7 @@ class IndustryPanel implements View.Observer {
     }
 
     private makeIndustryDiv(game: Game, industry: Model.Industry) {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const $container = $("<div>");
 
         const $scaleLabel = $("<span>");
@@ -299,12 +299,12 @@ class IndustryPanel implements View.Observer {
         this.observables.push({
             update: () => {
                 $scaleLabel.text(industry.getScale());
-                $prodCapLabel.text(industry.prodCap(galaxy));
+                $prodCapLabel.text(galaxy.prodCap(industry));
 
                 const opEff = industry.getOperationalEff() * 100;
                 $opEffLabel.text(opEff.toFixed(2));
 
-                const usedEnergy = industry.usedEnergy(galaxy);
+                const usedEnergy = galaxy.usedEnergy(industry);
                 $usedEnergyLabel.text(usedEnergy.toFixed(2));
 
                 const costPerUnit = industry.getCostPerUnit();
@@ -339,7 +339,7 @@ class PlanetInfoPanel implements View.Observer {
         private readonly view: HTMLElement,
         planet: Model.Planet,
     ) {
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
         const resource = planet.resource;
         const [x, y] = galaxy.getCoor(planet);
 
@@ -413,7 +413,7 @@ class PlanetInfoPanel implements View.Observer {
 
                 this.observables.add({
                     update: () => {
-                        const growthRate = colony.growthRate(galaxy);
+                        const growthRate = galaxy.growthRate(colony);
                         $growthLabel.text(`${growthRate > 0 ? "+" : ""}${Math.round(growthRate * 100)}%`);
                     },
                 });
@@ -500,7 +500,7 @@ class PlanetInfoPanel implements View.Observer {
                         .click((e) => {
                             const isOk = e.ctrlKey || confirm(`Are you sure to invest in power planet at planet ${planet.id}? This action costs $${Model.POWER_PLANT_COST}. (press ctrl while clicking the button suppresses this message)`);
                             if (isOk) {
-                                colony.expandPowerPlanet(galaxy);
+                                galaxy.expandPowerPlant(colony);
                                 galaxy.withdraw(Model.POWER_PLANT_COST);
                             }
                         });
@@ -533,21 +533,21 @@ class PlanetInfoPanel implements View.Observer {
                             $powerPlanetLvl.text(powerPlanetLvl);
                             const output = colony.getPowerOutput();
                             const eff = colony.getPowerOutputEff() * 100;
+                            const { industrialUsage, traderUsage, civUsage, totalUsage } = galaxy.getTotalPowerUsage(colony);
                             $powerOutput.text(`${output} (eff:${eff.toFixed(0)}%)`);
-                            $indUsage.text(colony.getIndustrialPowerUsage(galaxy));
-                            $traderUsage.text(colony.getTraderPowerUsage(galaxy));
-                            $civUsage.text(colony.getCivilianPowerUsage());
+                            $indUsage.text(industrialUsage);
+                            $traderUsage.text(traderUsage);
+                            $civUsage.text(civUsage);
 
-                            const canExpand = galaxy.getMoney() > Model.POWER_PLANT_COST && colony.canExpandPowerPlant(galaxy);
+                            const canExpand = galaxy.getMoney() > Model.POWER_PLANT_COST && galaxy.canExpandPowerPlant(colony);
                             $expandButton.prop("disabled", !canExpand);
 
-                            const totalUsage = colony.getTotalPowerUsage(galaxy);
                             const totalOutput = colony.getPowerOutput();
-                            const powerUsageEff = colony.getPowerUsageEff(galaxy) * 100;
+                            const powerUsageEff = galaxy.getPowerUsageEff(colony) * 100;
                             const summary = ` ${totalUsage}/${totalOutput} (${powerUsageEff.toFixed(2)}%) `;
                             $summary.text(summary);
 
-                            const price = colony.getEnergyPrice(galaxy);
+                            const price = galaxy.getEnergyPrice(colony);
                             $price.text(`$${price.toFixed(2)}`);
                         },
                     });
@@ -612,7 +612,7 @@ Finally, you want to overproduce goods that are used to maintain civilian & indu
 
     public update(game: Game) {
 
-        const galaxy = game.galaxy;
+        const galaxy = game.galaxyProxy;
 
         const data = Model
             .allProducts()
