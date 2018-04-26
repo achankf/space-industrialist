@@ -116,18 +116,18 @@ export class Colony {
 
     public serialize(): Model.IColony {
         return {
-            id: this.id,
+            commonHappiness: this.commonHappiness,
+            foodHappiness: this.foodHappiness,
             homePlanetId: this.homePlanet.id,
-            population: this.population,
-            playerInventoryId: this.playerInventory.id,
+            id: this.id,
+            isLockPopulation: this.isLockPopulation,
+            luxuryHappiness: this.luxuryHappiness,
             marketInventoryId: this.marketInventory.id,
             maxPopulation: this.maxPopulation,
-            isLockPopulation: this.isLockPopulation,
-            powerPlanetLevel: this.powerPlanetLevel,
+            playerInventoryId: this.playerInventory.id,
+            population: this.population,
             powerOutputEff: this.powerOutputEff,
-            foodHappiness: this.foodHappiness,
-            luxuryHappiness: this.luxuryHappiness,
-            commonHappiness: this.commonHappiness,
+            powerPlanetLevel: this.powerPlanetLevel,
         };
     }
 

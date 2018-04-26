@@ -20,12 +20,12 @@ export class Fleet implements Model.ILocatable {
 
     public serialize(): Model.IFleet {
         return {
-            id: this.id,
             cargoId: this.cargo.id,
+            id: this.id,
+            isRetiring: this.isRetiring,
             route: this.route.map((x) => x.id),
             routeAt: this.routeAt,
             state: this.state,
-            isRetiring: this.isRetiring,
         };
     }
 

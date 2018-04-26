@@ -20,8 +20,8 @@ export class Inventory {
     public serialize(): Model.IInventory {
         return {
             id: this.id,
-            maxStorage: this.maxStorage,
             inventory: this.inventory,
+            maxStorage: this.maxStorage,
         };
     }
 

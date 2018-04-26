@@ -36,11 +36,11 @@ export class Industry {
 
     public serialize(): Model.IIndustry {
         return {
-            id: this.id,
-            productType: this.productType,
             colonyId: this.colony.id,
-            scale: this.scale,
+            id: this.id,
             operationalEff: this.operationalEff,
+            productType: this.productType,
+            scale: this.scale,
         };
     }
 

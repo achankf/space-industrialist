@@ -9,17 +9,17 @@ const STARTING_CAPITAL = 1000000;
 
 export interface IInventory {
     id: number;
-    maxStorage: number;
     inventory: number[];
+    maxStorage: number;
 }
 
 export interface IFleet {
-    id: number;
     cargoId: number;
+    id: number;
+    isRetiring: boolean;
     route: number[];
     routeAt: number;
     state: Model.FleetState;
-    isRetiring: boolean;
 }
 
 export interface ICoor {
@@ -27,11 +27,11 @@ export interface ICoor {
 }
 
 export interface IIndustry {
-    id: number;
-    productType: Model.Product;
     colonyId: number;
-    scale: number;
+    id: number;
     operationalEff: number;
+    productType: Model.Product;
+    scale: number;
 }
 
 export interface IMarket {
@@ -45,43 +45,39 @@ export interface IPlanet {
 }
 
 export interface IColony {
-    id: number;
+    commonHappiness: number;
+    foodHappiness: number;
     homePlanetId: number;
-    population: number;
-    playerInventoryId: number;
+    id: number;
+    isLockPopulation: boolean;
+    luxuryHappiness: number;
     marketInventoryId: number;
     maxPopulation: number;
-    isLockPopulation: boolean;
-    powerPlanetLevel: number;
+    playerInventoryId: number;
+    population: number;
     powerOutputEff: number;
-    foodHappiness: number;
-    luxuryHappiness: number;
-    commonHappiness: number;
+    powerPlanetLevel: number;
 }
 
 export interface IRouteFleet {
+    fleetIds: number[];
     from: number;
     to: number;
-    fleetIds: number[];
 }
 
 export interface IGalaxySaveData {
-    locatables: Array<(Model.ILocatable & Model.ICoor)>;
-    allInventories: Model.IInventory[];
-    allIndustries: Model.IIndustry[];
-    allFleets: Model.IFleet[];
-    allPlanets: Model.IPlanet[];
     allColonies: Model.IColony[];
-
-    // internal variables
-    genId: number;
-    turnCounter: number;
-    timestamp: number;
-
-    // player
-    money: number;
-    numColonists: number;
-    numTraders: number;
+    allFleets: Model.IFleet[];
+    allIndustries: Model.IIndustry[];
+    allInventories: Model.IInventory[];
+    allPlanets: Model.IPlanet[];
+    genId: number; // internal variables
+    locatables: Array<(Model.ILocatable & Model.ICoor)>;
+    money: number; // player
+    numColonists: number; // player
+    numTraders: number; // player
+    timestamp: number; // internal variables
+    turnCounter: number; // internal variables
 }
 
 function toMap<T extends Model.IEntity>(it: Iterable<T>) {
@@ -199,11 +195,14 @@ export class Galaxy {
     public serialize() {
 
         return {
-            locatables: Immutable
-                .Seq(this.locatableCoors)
-                .map(([obj, coor]) => {
-                    return { id: obj.id, kind: obj.kind, coor } as ILocatable & ICoor;
-                })
+            allColonies: this.colonies.map((x) => x.serialize()),
+            allFleets: Immutable
+                .Seq(Algo.combineIt(...this.tradeFleets.values()))
+                .map((x) => x.serialize())
+                .toArray(),
+            allIndustries: Immutable
+                .Seq(Algo.combineIt(...this.colonyIndustries.values()))
+                .map((industry) => industry.serialize())
                 .toArray(),
             allInventories: this.colonies
                 .reduce((acc, x) => {
@@ -215,28 +214,23 @@ export class Galaxy {
                     .Seq(Algo.combineIt(...this.tradeFleets.values()))
                     .map((x) => x.getCargo()))
                 .map((x) => x.serialize()),
-            allIndustries: Immutable
-                .Seq(Algo.combineIt(...this.colonyIndustries.values()))
-                .map((industry) => industry.serialize())
-                .toArray(),
-            allFleets: Immutable
-                .Seq(Algo.combineIt(...this.tradeFleets.values()))
-                .map((x) => x.serialize())
-                .toArray(),
             allPlanets: Immutable
                 .Seq(this.locatableCoors.keys())
                 .filter((x) => x.kind === MapDataKind.Planet)
                 .map((x) => (x as Model.Planet).serialize())
                 .toArray(),
-            allColonies: this.colonies.map((x) => x.serialize()),
-
-            // game data
             genId: this.genId,
-            turnCounter: this.turnCounter,
-            timestamp: this.timestamp,
+            locatables: Immutable
+                .Seq(this.locatableCoors)
+                .map(([obj, coor]) => {
+                    return { id: obj.id, kind: obj.kind, coor } as ILocatable & ICoor;
+                })
+                .toArray(),
             money: this.money,
             numColonists: this.numColonists,
             numTraders: this.numTraders,
+            timestamp: this.timestamp,
+            turnCounter: this.turnCounter,
         } as IGalaxySaveData;
     }
 
@@ -710,8 +704,8 @@ export class Galaxy {
                     case Algo.Intersection2D.Intersection:
                     case Algo.Intersection2D.Tangent:
                         yield {
-                            kind: MapDataKind.RouteSegment,
                             from: coorA,
+                            kind: MapDataKind.RouteSegment,
                             to: coorB,
                         } as IRouteSegment;
                 }
