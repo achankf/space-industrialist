@@ -1,4 +1,9 @@
-import * as Model from "./model";
+import * as Model from ".";
+
+export interface IPlanet {
+    id: number;
+    resource: Model.RawMaterial;
+}
 
 export class Planet implements Model.ILocatable {
 
@@ -10,7 +15,7 @@ export class Planet implements Model.ILocatable {
         private colony?: Model.Colony,
     ) { }
 
-    public serialize(): Model.IPlanet {
+    public serialize(): IPlanet {
         return {
             id: this.id,
             resource: this.resource,

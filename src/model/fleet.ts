@@ -1,9 +1,18 @@
 import * as Immutable from "immutable";
+import * as Model from ".";
 import * as Algo from "../algorithm/algorithm";
-import * as Model from "./model";
 
 const PI_OVER_2 = Math.PI / 2;
 const SPEED = 0.3;
+
+export interface IFleet {
+    cargoId: number;
+    id: number;
+    isRetiring: boolean;
+    route: number[];
+    routeAt: number;
+    state: Model.FleetState;
+}
 
 export class Fleet implements Model.ILocatable {
 
@@ -18,7 +27,7 @@ export class Fleet implements Model.ILocatable {
         private isRetiring = false,
     ) { }
 
-    public serialize(): Model.IFleet {
+    public serialize(): IFleet {
         return {
             cargoId: this.cargo.id,
             id: this.id,
@@ -44,7 +53,7 @@ export class Fleet implements Model.ILocatable {
     public getSpeed(galaxy: Model.Galaxy) {
         const from = this.getStop();
         console.assert(from !== undefined);
-        const to = this.getNextStop()!;
+        const to = this.getNextStop();
         console.assert(to !== undefined);
 
         const fuelEff = galaxy.getRouteFuelEff(from, to);

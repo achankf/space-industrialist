@@ -3,11 +3,16 @@
     "extends": [
         "tslint:recommended"
     ],
-    "jsRules": {},
     "rules": {
         "max-classes-per-file": false,
         "no-console": false,
         "max-line-length": false
     },
-    "rulesDirectory": []
+    "rulesDirectory": [],
+    "linterOptions": {
+        "exclude": [
+            "config/**/*.js",
+            "node_modules/**/*.ts"
+        ]
+    }
 }

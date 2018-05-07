@@ -187,30 +187,6 @@ export class FloydWarshall<T> {
         }
     }
 
-    public *path(u: T, v: T) {
-        /*
-            procedure Path(u, v)
-            if next[u][v] = null then
-                return []
-            path = [u]
-            while u ≠ v
-                u ← next[u][v]
-                path.append(u)
-            return path
-        */
-        let uIdx = this.verticesIdx.get(u)!;
-        const vIdx = this.verticesIdx.get(v)!;
-
-        const nextMap = this.nextMap;
-        if (nextMap[uIdx][vIdx] !== undefined) {
-            yield u;
-            while (uIdx !== vIdx) {
-                uIdx = nextMap[uIdx][vIdx];
-                yield this.vertices[uIdx];
-            }
-        }
-    }
-
     public next(u: T, v: T) {
         const vIdx = this.verticesIdx.get(v)!;
         const uIdx = this.verticesIdx.get(u)!;
@@ -218,5 +194,6 @@ export class FloydWarshall<T> {
         if (nextIdx !== undefined) {
             return this.vertices[nextIdx];
         }
+        return undefined;
     }
 }

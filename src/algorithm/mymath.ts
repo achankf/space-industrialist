@@ -1,14 +1,5 @@
 // IANAM (I am not a mathematician)
 
-export function getQuantile(data: number[] | Float32Array, parts: number) {
-    const copy = data.slice().sort();
-    const percentile = copy.length / parts;
-
-    return new Array<number>(parts)
-        .fill(0)
-        .map((_, i) => copy[Math.floor(i * percentile)]);
-}
-
 export function sum(...args: number[]) {
     return args
         .filter((val) => !Number.isNaN(val))

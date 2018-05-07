@@ -1,7 +1,13 @@
 import * as Immutable from "immutable";
+import * as Model from ".";
 import * as Algo from "../algorithm/algorithm";
-import * as Model from "./model";
 import { Product } from "./product";
+
+export interface IInventory {
+    id: number;
+    inventory: number[];
+    maxStorage: number;
+}
 
 export class Inventory {
 

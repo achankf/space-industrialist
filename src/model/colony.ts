@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
+import * as Model from ".";
 import * as Algo from "../algorithm/algorithm";
-import * as Model from "./model";
 
 const POWER_POTENTIAL = 200;
 const PRICE_EXP_LOW = 0.7;
@@ -20,6 +20,21 @@ const COLONY_UNIT_DEMAND = (() => {
     ret[Model.Product.Vehicle] = 5;
     return ret;
 })();
+
+export interface IColony {
+    commonHappiness: number;
+    foodHappiness: number;
+    homePlanetId: number;
+    id: number;
+    isLockPopulation: boolean;
+    luxuryHappiness: number;
+    marketInventoryId: number;
+    maxPopulation: number;
+    playerInventoryId: number;
+    population: number;
+    powerOutputEff: number;
+    powerPlanetLevel: number;
+}
 
 export class Colony {
 
@@ -114,7 +129,7 @@ export class Colony {
         private commonHappiness = 0,
     ) { }
 
-    public serialize(): Model.IColony {
+    public serialize(): IColony {
         return {
             commonHappiness: this.commonHappiness,
             foodHappiness: this.foodHappiness,
@@ -271,10 +286,6 @@ export class Colony {
         this.consume();
         this.growth(galaxy);
 
-        this.calDerivedDemand(galaxy);
-    }
-
-    public calDerivedDemand(galaxy: Model.Galaxy) {
         this.derivedDemands.fill(0);
         for (const industry of galaxy.getIndustries(this)) {
             const prodCap = industry.prodCap(galaxy);

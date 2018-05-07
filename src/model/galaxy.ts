@@ -1,68 +1,18 @@
 import * as Immutable from "immutable";
+import * as Model from ".";
+import { CoorT, ILocatable, IRouteSegment, MapDataKind } from ".";
 import * as Algo from "../algorithm/algorithm";
-import * as Model from "./model";
-import { CoorT, ILocatable, IRouteSegment, MapDataKind } from "./model";
+import OrderListMap from "../algorithm/order_list_map";
+import OrderListSet from "../algorithm/order_list_set";
+import TupleMap from "../algorithm/tuple_map";
+import TupleSet from "../algorithm/tuple_set";
 import { allProducts } from "./product";
 
 const BIG_TURN = 50;
 const STARTING_CAPITAL = 1000000;
 
-export interface IInventory {
-    id: number;
-    inventory: number[];
-    maxStorage: number;
-}
-
-export interface IFleet {
-    cargoId: number;
-    id: number;
-    isRetiring: boolean;
-    route: number[];
-    routeAt: number;
-    state: Model.FleetState;
-}
-
-export interface ICoor {
+interface ICoor {
     coor: Model.CoorT;
-}
-
-export interface IIndustry {
-    colonyId: number;
-    id: number;
-    operationalEff: number;
-    productType: Model.Product;
-    scale: number;
-}
-
-export interface IMarket {
-    id: number;
-    inventoryId: number;
-}
-
-export interface IPlanet {
-    id: number;
-    resource: Model.RawMaterial;
-}
-
-export interface IColony {
-    commonHappiness: number;
-    foodHappiness: number;
-    homePlanetId: number;
-    id: number;
-    isLockPopulation: boolean;
-    luxuryHappiness: number;
-    marketInventoryId: number;
-    maxPopulation: number;
-    playerInventoryId: number;
-    population: number;
-    powerOutputEff: number;
-    powerPlanetLevel: number;
-}
-
-export interface IRouteFleet {
-    fleetIds: number[];
-    from: number;
-    to: number;
 }
 
 export interface IGalaxySaveData {
@@ -72,7 +22,7 @@ export interface IGalaxySaveData {
     allInventories: Model.IInventory[];
     allPlanets: Model.IPlanet[];
     genId: number; // internal variables
-    locatables: Array<(Model.ILocatable & Model.ICoor)>;
+    locatables: Array<(Model.ILocatable & ICoor)>;
     money: number; // player
     numColonists: number; // player
     numTraders: number; // player
@@ -109,6 +59,7 @@ export class Galaxy {
 
         for (const planet of planets.values()) {
             const coor = coors.get(planet.id)!;
+            console.assert(coor !== undefined);
             galaxy.addObj(planet, coor.coor);
         }
 
@@ -160,19 +111,19 @@ export class Galaxy {
     //// cached, memoized, calculated-on-the-fly tables
 
     // arranged into a tile grid, where object coordinates are ceiled
-    private readonly coorIndices = new Algo.TupleMap<[number, number], Set<ILocatable>>();
+    private readonly coorIndices = new TupleMap<[number, number], Set<ILocatable>>();
     private tradeRoutes = new Map<Model.Colony, Model.Colony[]>();
 
     // demand-supply, trade routes
     private readonly galacticDemands = new Map<Model.Product, number>();
     private readonly galacticSupplies = new Map<Model.Product, number>();
     private readonly galacticProdCap = new Map<Model.Product, number>();
-    private readonly downstreamConsumers = new Algo.TupleMap<[Model.Colony, Model.Colony], Map<Model.Product, Model.Colony[]>>();
+    private readonly downstreamConsumers = new TupleMap<[Model.Colony, Model.Colony], Map<Model.Product, Model.Colony[]>>();
     private readonly consumers = Model
         .allProducts()
         .map(() => new Set<Model.Colony>());
-    private tradeRoutePaths: Algo.FloydWarshall<Model.Colony>;
-    private fleetFuelEff = new Algo.OrderListMap<Model.Colony, number>((a, b) => a.id - b.id);
+    private tradeRoutePaths!: Algo.FloydWarshall<Model.Colony>;
+    private fleetFuelEff = new OrderListMap<Model.Colony, number>((a, b) => a.id - b.id);
 
     //// game entities & relationships
 
@@ -180,7 +131,7 @@ export class Galaxy {
     private readonly colonies: Model.Colony[] = [];
     private readonly locatableCoors = new Map<ILocatable, CoorT>();
     private readonly colonyIndustries = new Map<Model.Colony, Set<Model.Industry>>();
-    private readonly tradeFleets = new Algo.OrderListMap<Model.Colony, Set<Model.Fleet>>((a, b) => a.id - b.id);
+    private readonly tradeFleets = new OrderListMap<Model.Colony, Set<Model.Fleet>>((a, b) => a.id - b.id);
 
     // internal variables
     private genId = -1;
@@ -234,10 +185,6 @@ export class Galaxy {
         } as IGalaxySaveData;
     }
 
-    public createInventory(maxStorage: number = Infinity) {
-        return new Model.Inventory(this.nextId(), maxStorage);
-    }
-
     public deposit(amount: number) {
         this.money += amount;
     }
@@ -253,7 +200,7 @@ export class Galaxy {
 
         const findCoorForPlanets = () => {
 
-            const coors = new Algo.TupleSet<Model.CoorT>();
+            const coors = new TupleSet<Model.CoorT>();
 
             // naive algorithm
             NEXT_CANDIDATE: while (coors.size() < num) {
@@ -330,7 +277,7 @@ export class Galaxy {
     }
 
     public getIndustries(colony: Model.Colony) {
-        return Algo.getOr(this.colonyIndustries, colony, () => new Set<Model.Industry>());
+        return Immutable.Set(Algo.getOr(this.colonyIndustries, colony, () => new Set<Model.Industry>()));
     }
 
     public addIndustry(productType: Model.Product, colony: Model.Colony) {
@@ -565,7 +512,7 @@ export class Galaxy {
                 Array
                     .from(this.consumers[product2])
                     .filter((endPoint) => endPoint !== from &&
-                        this.nextTradeNode(from, endPoint) === next),
+                        this.getNextTradeNode(from, endPoint) === next),
             ] as [Model.Product, Model.Colony[]]));
 
         // lazily calculates all downstream sources
@@ -579,7 +526,11 @@ export class Galaxy {
         return this.locatableCoors.has(obj);
     }
 
-    private nextTradeNode(from: Model.Colony, to: Model.Colony) {
+    private createInventory(maxStorage: number = Infinity) {
+        return new Model.Inventory(this.nextId(), maxStorage);
+    }
+
+    private getNextTradeNode(from: Model.Colony, to: Model.Colony) {
         console.assert(from !== to); // caller checks this
         console.assert(this.tradeRoutePaths !== undefined);
         const ret = this.tradeRoutePaths.next(from, to);
@@ -594,13 +545,13 @@ export class Galaxy {
         for (const colony of this.colonies) {
             for (const product of allProducts()) {
                 const demandQty = colony.getDemand(product);
-                Algo.getAndSum(this.galacticDemands, product, demandQty);
+                Algo.mapSum(this.galacticDemands, product, demandQty);
 
                 const supplyQty = colony.getSupply(product);
-                Algo.getAndSum(this.galacticSupplies, product, supplyQty);
+                Algo.mapSum(this.galacticSupplies, product, supplyQty);
 
                 const prodCap = colony.getProdCap(this, product);
-                Algo.getAndSum(this.galacticProdCap, product, prodCap);
+                Algo.mapSum(this.galacticProdCap, product, prodCap);
             }
         }
     }
@@ -689,7 +640,7 @@ export class Galaxy {
     }
 
     private * searchTradeRoutes(at: CoorT, radius: number) {
-        const visited = new Algo.OrderListSet<Model.Colony>((c1, c2) => c1.id - c2.id);
+        const visited = new OrderListSet<Model.Colony>((c1, c2) => c1.id - c2.id);
         for (const [a, bs] of this.getTradeRoutes()) {
             const coorA = this.getCoor(a.getHomePlanet());
             for (const b of bs) {

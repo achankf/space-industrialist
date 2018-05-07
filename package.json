@@ -1,29 +1,34 @@
 {
     "name": "space-industrialist",
     "version": "1.0.0",
-    "description": "A simple logistics game made in Typescript & HTML Canvas.",
-    "main": "./src/index.js",
-    "directories": {
-        "test": "tests"
+    "description": "A simple logistics game made in Typescript & HTML Canvas & React.",
+    "private": true,
+    "homepage": "https://achankf.github.io/space-industrialist/",
+    "dependencies": {
+        "dexie": "^2.0.3",
+        "hammerjs": "^2.0.8",
+        "immutable": "^4.0.0-rc.9",
+        "react": "^16.3.2",
+        "react-dom": "^16.3.2",
+        "react-redux": "^5.0.7",
+        "react-scripts-ts": "2.15.1"
     },
-    "dependencies": {},
     "scripts": {
-        "watch": "webpack --watch --config webpack.config.js",
-        "build": "webpack --config webpack.config.js"
+        "start": "react-scripts-ts start",
+        "build": "react-scripts-ts build",
+        "test": "react-scripts-ts test --env=jsdom",
+        "eject": "react-scripts-ts eject"
     },
     "keywords": [],
     "author": "Alfred Chan <alfred8844@gmail.com>",
     "license": "ISC",
     "devDependencies": {
         "@types/hammerjs": "^2.0.35",
-        "@types/jquery": "^3.3.0",
-        "dexie": "^2.0.1",
-        "hammerjs": "^2.0.8",
-        "immutable": "^4.0.0-rc.9",
-        "ts-loader": "^3.5.0",
-        "ts-node": "^5.0.0",
-        "typescript": "^2.7.2",
-        "uglifyjs-webpack-plugin": "^1.2.0",
-        "webpack": "^3.11.0"
+        "@types/jest": "^22.2.3",
+        "@types/node": "^9.6.12",
+        "@types/react": "^16.3.13",
+        "@types/react-dom": "^16.0.5",
+        "@types/react-redux": "^5.0.19",
+        "typescript": "^2.8.3"
     }
 }

@@ -1,4 +1,4 @@
-import * as Model from "./model";
+import * as Model from ".";
 import { Product } from "./product";
 
 const BASE_YIELD = 10;
@@ -15,6 +15,14 @@ const BASE_POWER_USAGE = 10;
 // bonus production modifiers
 const OP_FACTOR_BONUS = 4;
 const ENERGY_BONUS = 4;
+
+export interface IIndustry {
+    colonyId: number;
+    id: number;
+    operationalEff: number;
+    productType: Model.Product;
+    scale: number;
+}
 
 export class Industry {
 
@@ -34,15 +42,13 @@ export class Industry {
         private operationalEff = MIN_OP_EFF, // 0.1 to 1
     ) { }
 
-    public serialize(): Model.IIndustry {
-        return {
-            colonyId: this.colony.id,
-            id: this.id,
-            operationalEff: this.operationalEff,
-            productType: this.productType,
-            scale: this.scale,
-        };
-    }
+    public serialize = (): IIndustry => ({
+        colonyId: this.colony.id,
+        id: this.id,
+        operationalEff: this.operationalEff,
+        productType: this.productType,
+        scale: this.scale,
+    })
 
     public upgrade() {
         ++this.scale;
