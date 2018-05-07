@@ -42,7 +42,15 @@ export default class Info extends React.Component<InfoProps> {
 
     private colonize = () => {
         const galaxy = this.props.game.getWriter();
-        galaxy.colonizePlanet(this.props.planet, 1);
+
+        const reader = this.props.game.getReader();
+        const numColonies = reader.getNumColonizedPlanets();
+
+        let initialPop = 1;
+        if (numColonies === 0) {
+            initialPop = 10; // first colony has bonus population to kick start the game
+        }
+        galaxy.colonizePlanet(this.props.planet, initialPop);
     }
 
     private expandPowerPlant = (e: React.MouseEvent<HTMLButtonElement>) => {

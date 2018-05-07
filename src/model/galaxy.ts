@@ -321,6 +321,10 @@ export class Galaxy {
         return this.numTraders;
     }
 
+    public getNumColonizedPlanets() {
+        return this.colonies.length;
+    }
+
     public addTrader() {
         this.numTraders += 1;
     }

@@ -219,6 +219,10 @@ export class GalaxyReadProxy {
     public isRetired = (fleet: Model.Fleet) => {
         return fleet.isRetire();
     }
+
+    public getNumColonizedPlanets = () => {
+        return this.galaxy.getNumColonizedPlanets();
+    }
 }
 
 export class GalaxyWriteProxy {
