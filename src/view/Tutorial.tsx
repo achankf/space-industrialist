@@ -10,7 +10,11 @@ export default () => {
         <TitleBar title="Tutorial" />
         <ContentPanel>
             <h2>Getting Started</h2>
-            Hello. <b>The game is currently paused. Follow this section and then unpause the game with the unpause button, which is located on the top-left side of the window.</b> Your first step is to colonize a food-producing (green) planet as your starting planet. Choose carefully because the first colony has a starting population of 10, and subsequent colonies will have a starting population of 1. After you're done, mouse over to the user interface, like labels,buttons, tables, and read the tooltips about game concepts. Feel free to click on any colored items on the map, as they are interactive. Also, try to change the viewport by panning and pinching, or click-and-drag and mouse wheel zooming if you are playing on a PC.
+            <p>Hello. <b>The game is paused whenever the game is loaded.</b> Follow this section and then unpause the game with the unpause button, which is located on the top-left side of the window.</p>
+
+            <p>First, try to control the viewport by panning and pinching, or click-and-drag and zooming if you are playing on a PC.</p>
+
+            <p>Your first step is to colonize a food-producing (green) planet as your starting planet. Choose carefully because the first colony has a starting population of 10, and subsequent colonies will have a starting population of 1. After you're done, mouse over to the user interface, like labels,buttons, tables, and read the tooltips about game concepts. Feel free to click on any colored items on the map, as they are interactive.</p>
 
             <h2>Goal of The Game</h2>
             You are the boss of a galactic corporation. Like all corporations, your only goal is to maximize profit through selling products to consumers. As the boss, you can decide the company's funding in several ways.

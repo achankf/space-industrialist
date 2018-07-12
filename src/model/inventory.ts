@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
 import * as Model from ".";
-import * as Algo from "../algorithm/algorithm";
+import { sum } from "../../node_modules/myalgo-ts";
 import { Product } from "./product";
 
 export interface IInventory {
@@ -13,7 +13,7 @@ export class Inventory {
 
     // either generated on the fly or restored from some source
     private demandSrcs: Model.Industry[] = [];
-    private usedSpace = Algo.sum(...this.inventory);
+    private usedSpace = sum(...this.inventory);
 
     constructor(
         public readonly id: number,

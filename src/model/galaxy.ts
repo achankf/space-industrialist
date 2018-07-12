@@ -1,11 +1,7 @@
 import * as Immutable from "immutable";
+import { add, combine, compare, defaultZero, distance, FloydWarshall, IntersectionKind, kruskalMST, norm, subtract, testLineSegmentCircleIntersect, Trie, uniq } from "myalgo-ts";
 import * as Model from ".";
 import { CoorT, ILocatable, IRouteSegment, MapDataKind } from ".";
-import * as Algo from "../algorithm/algorithm";
-import OrderListMap from "../algorithm/order_list_map";
-import OrderListSet from "../algorithm/order_list_set";
-import TupleMap from "../algorithm/tuple_map";
-import TupleSet from "../algorithm/tuple_set";
 import { allProducts } from "./product";
 
 const BIG_TURN = 50;
@@ -111,19 +107,19 @@ export class Galaxy {
     //// cached, memoized, calculated-on-the-fly tables
 
     // arranged into a tile grid, where object coordinates are ceiled
-    private readonly coorIndices = new TupleMap<[number, number], Set<ILocatable>>();
+    private readonly coorIndices = new Trie<[number, number], Set<ILocatable>>();
     private tradeRoutes = new Map<Model.Colony, Model.Colony[]>();
 
     // demand-supply, trade routes
     private readonly galacticDemands = new Map<Model.Product, number>();
     private readonly galacticSupplies = new Map<Model.Product, number>();
     private readonly galacticProdCap = new Map<Model.Product, number>();
-    private readonly downstreamConsumers = new TupleMap<[Model.Colony, Model.Colony], Map<Model.Product, Model.Colony[]>>();
+    private downstreamConsumers = new Trie<[Model.Colony, Model.Colony], Map<Model.Product, Model.Colony[]>>();
     private readonly consumers = Model
         .allProducts()
         .map(() => new Set<Model.Colony>());
-    private tradeRoutePaths!: Algo.FloydWarshall<Model.Colony>;
-    private fleetFuelEff = new OrderListMap<Model.Colony, number>((a, b) => a.id - b.id);
+    private tradeRoutePaths!: FloydWarshall<Model.Colony>;
+    private fleetFuelEff = new Trie<[Model.Colony, Model.Colony], number>();
 
     //// game entities & relationships
 
@@ -131,7 +127,7 @@ export class Galaxy {
     private readonly colonies: Model.Colony[] = [];
     private readonly locatableCoors = new Map<ILocatable, CoorT>();
     private readonly colonyIndustries = new Map<Model.Colony, Set<Model.Industry>>();
-    private readonly tradeFleets = new OrderListMap<Model.Colony, Set<Model.Fleet>>((a, b) => a.id - b.id);
+    private readonly tradeFleets = new Trie<[Model.Colony, Model.Colony], Set<Model.Fleet>>();
 
     // internal variables
     private genId = -1;
@@ -147,23 +143,22 @@ export class Galaxy {
 
         return {
             allColonies: this.colonies.map((x) => x.serialize()),
-            allFleets: Immutable
-                .Seq(Algo.combineIt(...this.tradeFleets.values()))
+            allFleets: combine(...this.tradeFleets.values())
                 .map((x) => x.serialize())
-                .toArray(),
-            allIndustries: Immutable
-                .Seq(Algo.combineIt(...this.colonyIndustries.values()))
+                .collect(),
+            allIndustries: combine(...this.colonyIndustries.values())
                 .map((industry) => industry.serialize())
-                .toArray(),
+                .collect(),
             allInventories: this.colonies
                 .reduce((acc, x) => {
                     acc.push(x.getPlayerInventory());
                     acc.push(x.getMarketInventory());
                     return acc;
                 }, [] as Model.Inventory[])
-                .concat(...Immutable
-                    .Seq(Algo.combineIt(...this.tradeFleets.values()))
-                    .map((x) => x.getCargo()))
+                .concat(
+                    ...combine(
+                        ...this.tradeFleets.values())
+                        .map((x) => x.getCargo()))
                 .map((x) => x.serialize()),
             allPlanets: Immutable
                 .Seq(this.locatableCoors.keys())
@@ -200,19 +195,19 @@ export class Galaxy {
 
         const findCoorForPlanets = () => {
 
-            const coors = new TupleSet<Model.CoorT>();
+            const coors = new Trie<Model.CoorT, true>();
 
             // naive algorithm
-            NEXT_CANDIDATE: while (coors.size() < num) {
+            while (coors.size() < num) {
                 const candidate = this.randomCoor(bound);
-                for (const coor of coors) {
-                    if (Algo.distance2D(candidate, coor) < minDist) {
-                        continue NEXT_CANDIDATE;
+                for (const coor of coors.keys()) {
+                    if (distance(candidate, coor) < minDist) {
+                        break;
                     }
                 }
-                coors.add(candidate);
+                coors.set(candidate, true);
             }
-            return coors.values();
+            return coors.keys();
         };
         let i = 0;
         for (const coor of findCoorForPlanets()) {
@@ -242,7 +237,7 @@ export class Galaxy {
         const colony2 = route[1];
 
         // remove data, then the index
-        const allFleets = this.tradeFleets.get(colony1, colony2)!;
+        const allFleets = this.tradeFleets.get([colony1, colony2])!;
         console.assert(allFleets !== undefined); // otherwise removing an nonexist object
         const isDeleted = allFleets.delete(fleet);
         console.assert(isDeleted); // otherwise removing an nonexist object
@@ -252,7 +247,7 @@ export class Galaxy {
     }
 
     public getNumUsedTraders(from: Model.Colony, to: Model.Colony) {
-        const allFleets = this.tradeFleets.get(from, to);
+        const allFleets = this.tradeFleets.get([from, to]);
         if (allFleets !== undefined) {
             return allFleets.size;
         }
@@ -277,7 +272,7 @@ export class Galaxy {
     }
 
     public getIndustries(colony: Model.Colony) {
-        return Immutable.Set(Algo.getOr(this.colonyIndustries, colony, () => new Set<Model.Industry>()));
+        return this.colonyIndustries.get(colony);
     }
 
     public addIndustry(productType: Model.Product, colony: Model.Colony) {
@@ -335,7 +330,7 @@ export class Galaxy {
     }
 
     public getRouteFuelEff(from: Model.Colony, to: Model.Colony) {
-        const ret = this.fleetFuelEff.get(from, to)!;
+        const ret = this.fleetFuelEff.get([from, to])!;
         if (ret !== undefined) {
             return ret;
         }
@@ -368,7 +363,7 @@ export class Galaxy {
      */
     public turn() {
 
-        const fleets = Algo.combineIt(...this.tradeFleets.values());
+        const fleets = combine(...this.tradeFleets.values());
         for (const fleet of fleets) {
             fleet.operate(this);
         }
@@ -436,14 +431,13 @@ export class Galaxy {
 
             const sorted = possibleCoors
                 .map((coor) => this.idxCoor(coor))
-                .sort(Algo.compare2D);
-            return Immutable
-                .Seq(Algo.uniq(sorted, Algo.equal2D)) // find uniq elements from a sorted collection
+                .sort(compare);
+            return uniq(sorted, compare) // find uniq elements from a sorted collection
                 .map((coor) => this.getIdx(coor)) // extra objects from coordinates
                 .reduce((acc, cur) => acc.union(cur), Immutable.Set<Model.ILocatable>()) // flatten collections
                 .filter((obj) => {
                     const coor = this.getCoor(obj);
-                    const dist = Algo.distance2D(coor, at);
+                    const dist = distance(coor, at);
                     return dist >= minDistance && dist <= radius;
                 });
         };
@@ -461,7 +455,7 @@ export class Galaxy {
             const at = this.locatableCoors.get(obj)!;
             console.assert(at !== undefined);
 
-            const distanceLeft = Algo.distance2D(to, at);
+            const distanceLeft = distance(to, at);
             if (distanceLeft < finalSpeed) {
                 // close enough
                 return {
@@ -470,14 +464,14 @@ export class Galaxy {
                 };
             } else {
                 // far away, keep moving
-                const dir = Algo.subtract2D(to, at);
-                const length = Algo.norm2D(dir);
+                const dir = subtract(to, at);
+                const length = norm(dir);
                 const displacement = [
                     dir[0] / length * finalSpeed,
                     dir[1] / length * finalSpeed] as [number, number];
                 return {
                     distTravelled: length,
-                    nowAt: Algo.sum2D(at, displacement),
+                    nowAt: add(at, displacement),
                 };
             }
         };
@@ -492,15 +486,15 @@ export class Galaxy {
     }
 
     public getGalacticDemands(product: Model.Product) {
-        return Algo.getQty(this.galacticDemands, product);
+        return defaultZero(this.galacticDemands.get(product));
     }
 
     public getGalacticSupplies(product: Model.Product) {
-        return Algo.getQty(this.galacticSupplies, product);
+        return defaultZero(this.galacticSupplies.get(product));
     }
 
     public getGalacticProdCap(product: Model.Product) {
-        return Algo.getQty(this.galacticProdCap, product);
+        return defaultZero(this.galacticProdCap.get(product));
     }
 
     public getDownstreamConsumers(product: Model.Product, from: Model.Colony, next: Model.Colony) {
@@ -549,29 +543,32 @@ export class Galaxy {
         for (const colony of this.colonies) {
             for (const product of allProducts()) {
                 const demandQty = colony.getDemand(product);
-                Algo.mapSum(this.galacticDemands, product, demandQty);
+                const oldDemandQty = defaultZero(this.galacticDemands.get(product));
+                this.galacticDemands.set(product, oldDemandQty + demandQty);
 
                 const supplyQty = colony.getSupply(product);
-                Algo.mapSum(this.galacticSupplies, product, supplyQty);
+                const oldSupplyQty = defaultZero(this.galacticSupplies.get(product));
+                this.galacticSupplies.set(product, oldSupplyQty + supplyQty);
 
                 const prodCap = colony.getProdCap(this, product);
-                Algo.mapSum(this.galacticProdCap, product, prodCap);
+                const oldProdCap = defaultZero(this.galacticProdCap.get(product));
+                this.galacticProdCap.set(product, oldProdCap + prodCap);
             }
         }
     }
 
     private calTradeRoutes() {
 
-        const distance = (a: Model.Colony, b: Model.Colony) => {
+        const colonyDist = (a: Model.Colony, b: Model.Colony) => {
             const coorA = this.getCoor(a);
             const coorB = this.getCoor(b);
-            return Algo.distance2D(coorA, coorB);
+            return distance(coorA, coorB);
         };
 
         const vertices = new Set(this.colonies);
 
         // find a minimum spanning tree for the trade route map
-        this.tradeRoutes = Algo.kruskalMST(
+        this.tradeRoutes = kruskalMST(
             vertices,
             (vertex: Model.Colony) => {
                 // complete graph for now
@@ -579,14 +576,14 @@ export class Galaxy {
                 ret.delete(vertex);
                 return ret.values();
             },
-            (a: Model.Colony, b: Model.Colony) => distance(a, b),
+            (a: Model.Colony, b: Model.Colony) => colonyDist(a, b),
         );
 
         // pre-compute all-pair shortest paths for the trade routes
-        this.tradeRoutePaths = new Algo.FloydWarshall(this.tradeRoutes,
-            (a: Model.Colony, b: Model.Colony) => distance(a, b));
+        this.tradeRoutePaths = new FloydWarshall(this.tradeRoutes,
+            (a: Model.Colony, b: Model.Colony) => colonyDist(a, b));
 
-        this.downstreamConsumers.clear();
+        this.downstreamConsumers = new Trie();
     }
 
     private addObj(obj: ILocatable, coor: CoorT) {
@@ -644,20 +641,19 @@ export class Galaxy {
     }
 
     private * searchTradeRoutes(at: CoorT, radius: number) {
-        const visited = new OrderListSet<Model.Colony>((c1, c2) => c1.id - c2.id);
+        const visited = new Trie<[Model.Colony, Model.Colony], true>();
         for (const [a, bs] of this.getTradeRoutes()) {
             const coorA = this.getCoor(a.getHomePlanet());
             for (const b of bs) {
                 const coorB = this.getCoor(b.getHomePlanet());
-                if (visited.has(a, b)) {
+                if (visited.has([a, b])) {
                     continue;
                 }
-                visited.add(a, b);
-
-                const test = Algo.testLineSegmentCircleIntersect(coorA, coorB, at, radius);
+                visited.set([a, b], true);
+                const test = testLineSegmentCircleIntersect(coorA, coorB, at, radius);
                 switch (test) {
-                    case Algo.Intersection2D.Intersection:
-                    case Algo.Intersection2D.Tangent:
+                    case IntersectionKind.Intersection:
+                    case IntersectionKind.Tangent:
                         yield {
                             from: coorA,
                             kind: MapDataKind.RouteSegment,
@@ -675,15 +671,15 @@ export class Galaxy {
     }
 
     private calRouteFuelEff() {
-        this.fleetFuelEff.clear();
+        this.fleetFuelEff = new Trie();
         for (const [from, tos] of this.tradeRoutes) {
             for (const to of tos) {
-                this.fleetFuelEff.getOrSet(() => {
+                this.fleetFuelEff.getOrSet([from, to], () => {
                     const fromEff = from.getPowerUsageEff(this);
                     const toEff = to.getPowerUsageEff(this);
 
                     return (fromEff + toEff) / 2;
-                }, from, to);
+                });
             }
         }
     }
@@ -726,9 +722,12 @@ export class Galaxy {
 
         const colony = industry.colony;
 
-        Algo
-            .getOrSet(this.colonyIndustries, colony, () => new Set())
-            .add(industry);
+        {
+            const industries = this.colonyIndustries.get(colony);
+            if (industries === undefined) {
+                this.colonyIndustries.set(colony, new Set());
+            }
+        }
 
         colony
             .getPlayerInventory()
@@ -740,7 +739,7 @@ export class Galaxy {
         }
 
         // clear cache, so that fleets will recalculate the downstream demands
-        this.downstreamConsumers.clear();
+        this.downstreamConsumers = new Trie();
     }
 
     private addTradeFleetHelper(fleet: Model.Fleet) {
@@ -748,7 +747,7 @@ export class Galaxy {
         const [from, to] = fleet.getRoute();
         console.assert(from !== undefined);
         console.assert(to !== undefined);
-        const fleets = this.tradeFleets.getOrSet(() => new Set(), from, to);
+        const fleets = this.tradeFleets.getOrSet([from, to], () => new Set());
         fleets.add(fleet);
     }
 }

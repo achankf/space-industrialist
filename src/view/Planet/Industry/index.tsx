@@ -1,5 +1,6 @@
 import * as Immutable from "immutable";
 import * as React from "react";
+import { toIt } from "../../../../node_modules/myalgo-ts";
 import { Game } from "../../../game";
 import * as Model from "../../../model";
 import { allProducts, Product } from "../../../model/product";
@@ -51,7 +52,7 @@ export default class Industry extends React.Component<IndustryProps> {
         const game = this.props.gameWrapper.game;
         const colony = this.props.colony;
         const galaxy = game.getReader();
-        const industries = galaxy.getIndustries(colony);
+        const industries = galaxy.getIndustries(colony) || new Set<Model.Industry>();
 
         const productsInProd = Immutable
             .Seq(industries)
@@ -69,8 +70,9 @@ export default class Industry extends React.Component<IndustryProps> {
             .sortBy((product) => Product[product])
             .map((product) => {
 
-                const industry = industries
-                    .findKey((x) => x.productType === product);
+                const industry = toIt(industries)
+                    .filter((x) => x.productType === product)
+                    .inject();
 
                 return <tr key={product}>
                     <td title={PRODUCT_HOVER_TEXT.get(product)!}>

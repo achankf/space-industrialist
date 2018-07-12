@@ -1,4 +1,3 @@
-
 export * from "./product";
 export * from "./colony";
 export * from "./industry";

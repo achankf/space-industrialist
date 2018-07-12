@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
 import * as Model from ".";
-import * as Algo from "../algorithm/algorithm";
+import { average, sum, toIt } from "../../node_modules/myalgo-ts";
 
 const POWER_POTENTIAL = 200;
 const PRICE_EXP_LOW = 0.7;
@@ -197,8 +197,11 @@ export class Colony {
     }
 
     public getIndustrialPowerUsage(galaxy: Model.Galaxy) {
-        return Algo.sum(...Immutable
-            .Seq(galaxy.getIndustries(this))
+        const industries = galaxy.getIndustries(this);
+        if (industries === undefined) {
+            return 0;
+        }
+        return sum(...toIt(industries)
             .map((industry) => industry.getPowerUsage()));
     }
 
@@ -260,12 +263,9 @@ export class Colony {
     }
 
     public isProducing(galaxy: Model.Galaxy, product: Model.Product) {
-        for (const industry of galaxy.getIndustries(this)) {
-            if (industry.productType === product) {
-                return true;
-            }
-        }
-        return false;
+        const industries = galaxy.getIndustries(this);
+        return industries !== undefined && toIt(industries)
+            .some((industry) => industry.productType === product);
     }
 
     public hasDemand(product: Model.Product) {
@@ -287,7 +287,13 @@ export class Colony {
         this.growth(galaxy);
 
         this.derivedDemands.fill(0);
-        for (const industry of galaxy.getIndustries(this)) {
+        const industries = galaxy.getIndustries(this);
+
+        if (industries === undefined) {
+            return;
+        }
+
+        for (const industry of industries) {
             const prodCap = industry.prodCap(galaxy);
             Immutable
                 .Seq(Model.Industry.getDemandProducts(industry.productType))
@@ -317,8 +323,11 @@ export class Colony {
     }
 
     public getProdCap(galaxy: Model.Galaxy, product: Model.Product) {
-        return Algo.sum(...Immutable
-            .Seq(galaxy.getIndustries(this))
+        const industries = galaxy.getIndustries(this);
+        if (industries === undefined) {
+            return 0;
+        }
+        return sum(...toIt(industries)
             .filter((industry) => industry.productType === product)
             .map((industry) => industry.prodCap(galaxy)));
     }
@@ -496,13 +505,13 @@ export class Colony {
             .allProducts()
             .map((product) => consume1(product));
 
-        this.commonHappiness = Algo.average(
+        this.commonHappiness = average(
             allConsumption[Model.Product.Drink],
             allConsumption[Model.Product.Apparel],
             allConsumption[Model.Product.Medicine],
         );
 
-        this.luxuryHappiness = Algo.average(
+        this.luxuryHappiness = average(
             allConsumption[Model.Product.Accessory],
             allConsumption[Model.Product.Furniture],
             allConsumption[Model.Product.Gadget],

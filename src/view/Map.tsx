@@ -2,8 +2,7 @@ import * as Hammer from "hammerjs";
 import * as Immutable from "immutable";
 import * as React from "react";
 import { connect } from "react-redux";
-import * as Algo from "../algorithm/algorithm";
-import OrderListSet from "../algorithm/order_list_set";
+import { add, norm, project, subtract, Trie } from "../../node_modules/myalgo-ts";
 import { Game } from "../game";
 import * as Model from "../model";
 import { addClosable, ClosablePanelType } from "./action/closable_action";
@@ -11,7 +10,6 @@ import { IStoreProps } from "./reducer";
 
 const MIN_GRID_SIZE = 50;
 const MAX_GRID_SIZE = 300;
-const UI_INTERVAL = 17;
 const RADIUS = 3 / 10;
 
 interface IMapViewSaveData {
@@ -40,7 +38,7 @@ class Map extends React.PureComponent<MapProps> {
     private topLeft: [number, number] = [0, 0];
     private gridSize = MIN_GRID_SIZE;
     private cachedGrid: HTMLCanvasElement;
-    private pid?: number;
+    private updateAnimation?: () => void;
 
     constructor(props: MapProps) {
         super(props);
@@ -106,6 +104,10 @@ class Map extends React.PureComponent<MapProps> {
     }
 
     private draw = () => {
+
+        if (this.updateAnimation !== undefined) {
+            this.updateAnimation();
+        }
 
         const game = this.props.gameWrapper.game;
 
@@ -253,16 +255,16 @@ class Map extends React.PureComponent<MapProps> {
         ctx.lineWidth = 1;
         ctx.strokeStyle = "cyan";
 
-        const drawn = new OrderListSet<Model.Colony>((a, b) => a.id - b.id);
+        const drawn = new Trie<[Model.Colony, Model.Colony], true>();
 
         for (const [u, vs] of tradeRoutes) {
             for (const v of vs) {
 
-                const edge = [u, v];
-                if (drawn.has(...edge)) {
+                const edge: [Model.Colony, Model.Colony] = [u, v];
+                if (drawn.has(edge)) {
                     continue;
                 }
-                drawn.add(...edge);
+                drawn.set(edge, true);
 
                 const [ux, uy] = this.toVpCoor(galaxy.getCoor(u));
                 const [vx, vy] = this.toVpCoor(galaxy.getCoor(v));
@@ -321,12 +323,15 @@ class Map extends React.PureComponent<MapProps> {
 
     // helper function behind the event handlers
     private panTo(game: Game, vpFrom: [number, number], vpTo: [number, number]) {
-        this.stopAction();
+
+        this.updateAnimation = undefined;
+
         const from = this.toGameCoor(vpFrom);
         const to = this.toGameCoor(vpTo);
-        const offset = Algo.subtract2D(from, to);
-        let distance = Algo.norm2D(offset);
-        const pid = window.setInterval(() => {
+        const offset = subtract(from, to);
+        let distance = norm(offset);
+
+        this.updateAnimation = () => {
             const speed = distance * 0.02;
             let final;
             if (speed === 0) {
@@ -334,17 +339,16 @@ class Map extends React.PureComponent<MapProps> {
             }
 
             if (speed < 0.01 / this.gridSize) {
-                window.clearInterval(pid);
+                this.updateAnimation = undefined;
                 final = distance;
             } else {
                 final = speed;
                 distance -= speed;
             }
-            const proj = Algo.project2D(offset, final);
-            this.topLeft = Algo.sum2D(this.topLeft, proj);
+            const proj = project(offset, final);
+            this.topLeft = add(this.topLeft, proj);
             this.cachedGrid = this.drawGrid(game);
-        });
-        return pid;
+        };
     }
 
     private drawTriangle(ctx: CanvasRenderingContext2D) {
@@ -354,15 +358,8 @@ class Map extends React.PureComponent<MapProps> {
         ctx.closePath();
     }
 
-    private stopAction() {
-        if (this.pid !== undefined) {
-            window.clearInterval(this.pid);
-            this.pid = undefined;
-        }
-    }
-
     private pan(game: Game, e: HammerInput) {
-        this.pid = this.panTo(game, this.getVpCenter(), Algo.sum2D(this.getVpCenter(), [e.deltaX, e.deltaY]));
+        this.panTo(game, this.getVpCenter(), add(this.getVpCenter(), [e.deltaX, e.deltaY]));
     }
 
     private click(game: Game, e: HammerInput) {
@@ -407,15 +404,17 @@ class Map extends React.PureComponent<MapProps> {
             e.center.x - bb.left,
             e.center.y - bb.top,
         ] as [number, number];
-        this.pid = this.panTo(game, this.getVpCenter(), coor);
+        this.panTo(game, this.getVpCenter(), coor);
     }
 
     private wheel(game: Game, e: WheelEvent | HammerInput) {
-        this.stopAction();
+
+        this.updateAnimation = undefined;
+
         const isZoomingIn = e.deltaY < 0;
         const centerCoor = this.getCenter();
         let zoomSpeed = 10;
-        this.pid = window.setInterval(() => {
+        this.updateAnimation = () => {
             if (isZoomingIn) {
                 this.gridSize = Math.min(MAX_GRID_SIZE, this.gridSize + zoomSpeed);
             } else {
@@ -423,20 +422,20 @@ class Map extends React.PureComponent<MapProps> {
             }
             this.topLeft = this.centerVp(this.toVpCoor(centerCoor));
 
-            if (this.pid !== undefined) {
+            if (this.updateAnimation !== undefined) {
                 zoomSpeed /= 1.1;
                 if (zoomSpeed < 1) {
-                    window.clearInterval(this.pid);
+                    this.updateAnimation = undefined;
                 }
             }
             this.cachedGrid = this.drawGrid(game);
-        }, UI_INTERVAL);
+        };
     }
 
     private centerVp(vpAt: [number, number]) {
         const at = this.toGameCoor(vpAt);
-        const offset = Algo.subtract2D(this.getCenter(), at);
-        return Algo.sum2D(this.topLeft, offset);
+        const offset = subtract(this.getCenter(), at);
+        return add(this.topLeft, offset);
     }
 
     private toVpCoor([x, y]: [number, number]): [number, number] {

@@ -20,7 +20,8 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noUnusedLocals": true,
-    "pretty": true
+    "pretty": true,
+    "keyofStringsOnly": true // Immutable.js 
   },
   "exclude": [
     "node_modules",

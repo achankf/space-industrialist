@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
 import * as Model from ".";
-import * as Algo from "../algorithm/algorithm";
+import { equal, subtract, sum } from "../../node_modules/myalgo-ts";
 
 const PI_OVER_2 = Math.PI / 2;
 const SPEED = 0.3;
@@ -109,7 +109,7 @@ export class Fleet implements Model.ILocatable {
             const stop = galaxy.getCoor(this.getStop());
             let from;
             let to;
-            if (Algo.equal2D(curPos, stop)) {
+            if (equal(curPos, stop)) {
                 from = stop;
                 const next = galaxy.getCoor(this.nextStop());
                 to = next;
@@ -118,7 +118,7 @@ export class Fleet implements Model.ILocatable {
                 to = stop;
             }
 
-            const [x, y] = Algo.subtract2D(from, to);
+            const [x, y] = subtract(from, to);
             const angle = Math.atan(y / x);
             return angle + (from[0] >= to[0] ? -PI_OVER_2 : PI_OVER_2);
         }
@@ -130,7 +130,7 @@ export class Fleet implements Model.ILocatable {
         const cargoSpace = this.cargo.getEmptySpace();
         // this method assign at least 1 unit space per commodity
         console.assert(cargoSpace >= Model.allProducts().length);
-        const totalDemand = Algo.sum(...routeDemands);
+        const totalDemand = sum(...routeDemands);
         const partition = new Map<Model.Product, number>();
 
         if (totalDemand === 0) {
@@ -169,7 +169,7 @@ export class Fleet implements Model.ILocatable {
             .allProducts()
             .reduce((acc, product) => {
                 // get all downstream consumers (end-points of shortest paths)
-                const deficitSum = Algo.sum(...galaxy
+                const deficitSum = sum(...galaxy
                     .getDownstreamConsumers(product, stop, next)
                     .map((consumer) => consumer.getDeficit(galaxy, product)));
 
@@ -302,7 +302,7 @@ export class Fleet implements Model.ILocatable {
 
         const { nowAt } = galaxy.move(this, dest, this.getSpeed(galaxy));
 
-        if (Algo.equal2D(nowAt, dest)) {
+        if (equal(nowAt, dest)) {
             this.state = Model.FleetState.Docked;
         }
     }
