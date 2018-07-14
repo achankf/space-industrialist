@@ -326,6 +326,21 @@ export class Galaxy {
         return this.colonies.length;
     }
 
+    public calCenter(): [number, number] {
+        const [minX, minY, maxX, maxY] = Immutable.Seq(this.locatableCoors)
+            .filter(([locatable]) => locatable.kind === MapDataKind.Planet)
+            .map(([, coor]) => coor)
+            .reduce(([accMinX, accMinY, accMaxX, accMaxY], [x, y]) => {
+                return [
+                    Math.min(x, accMinX),
+                    Math.min(y, accMinY),
+                    Math.max(x, accMaxX),
+                    Math.max(y, accMaxY),
+                ];
+            }, [0, 0, 0, 0]);
+        return [(minX + maxX) / 2, (minY + maxY) / 2];
+    }
+
     public addTrader() {
         this.numTraders += 1;
     }

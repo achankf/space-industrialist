@@ -40,7 +40,7 @@ class Map extends React.PureComponent<MapProps> {
     private canvas!: HTMLCanvasElement;
 
     // UI data
-    private topLeft: [number, number] = [0, 0];
+    private topLeft: [number, number];
     private gridSize = MIN_GRID_SIZE;
     private cachedGrid: HTMLCanvasElement;
     private updateAnimation?: () => void;
@@ -48,6 +48,9 @@ class Map extends React.PureComponent<MapProps> {
     constructor(props: MapProps) {
         super(props);
         this.cachedGrid = document.createElement("canvas");
+
+        const game = this.props.gameWrapper.game;
+        this.topLeft = game.getReader().calCenter();
     }
 
     public serialize(): IMapViewSaveData {
@@ -101,20 +104,17 @@ class Map extends React.PureComponent<MapProps> {
     }
 
     public render() {
-        return <canvas id="map" ref={(canvas) => {
-            if (canvas !== null) {
-                this.canvas = canvas;
-            }
-        }} />;
+        return <canvas id="map" ref={(canvas) => this.canvas = canvas!} />;
     }
 
     private draw = () => {
 
+        const game = this.props.gameWrapper.game;
+
         if (this.updateAnimation !== undefined) {
             this.updateAnimation();
+            this.cachedGrid = this.drawGrid(game);
         }
-
-        const game = this.props.gameWrapper.game;
 
         // draw the map
         const width = document.body.clientWidth;
@@ -352,7 +352,6 @@ class Map extends React.PureComponent<MapProps> {
             }
             const proj = project(offset, final);
             this.topLeft = add(this.topLeft, proj);
-            this.cachedGrid = this.drawGrid(game);
         };
     }
 
@@ -433,7 +432,6 @@ class Map extends React.PureComponent<MapProps> {
                     this.updateAnimation = undefined;
                 }
             }
-            this.cachedGrid = this.drawGrid(game);
         };
     }
 

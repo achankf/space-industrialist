@@ -228,6 +228,10 @@ export class GalaxyReadProxy {
     public getNumColonizedPlanets = () => {
         return this.galaxy.getNumColonizedPlanets();
     }
+
+    public calCenter = () => {
+        return this.galaxy.calCenter();
+    }
 }
 
 export class GalaxyWriteProxy {
