@@ -1,9 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Dispatch } from "../../node_modules/redux";
 import { Game, ISaveData } from "../game";
-import { ClosablePanelType } from "./action/closable_action";
-import { addClosable } from "./action/closable_action";
-import { IStoreProps } from "./reducer";
+import { addClosable, ClosableAction, ClosablePanelType } from "./action/closable_action";
 import TitleBar from "./TitleBar";
 import Window from "./Window";
 
@@ -123,9 +122,8 @@ class ImportExport extends React.Component<ImportExportProps, IImportExportState
     }
 }
 
-export default connect<{}, IImportExportDispatchProps, IImportExportProps, IStoreProps>(
-    undefined,
-    (dispatch): IImportExportDispatchProps => ({
-        showTutorial: () => dispatch(addClosable(ClosablePanelType.Tutorial)),
-    }),
-)(ImportExport);
+const dispatchers = (dispatch: Dispatch<ClosableAction>): IImportExportDispatchProps => ({
+    showTutorial: () => dispatch(addClosable(ClosablePanelType.Tutorial)),
+});
+
+export default connect(null, dispatchers)(ImportExport);

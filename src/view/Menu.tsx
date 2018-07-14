@@ -1,10 +1,10 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Dispatch } from "../../node_modules/redux";
 import { Game } from "../game";
 import * as Model from "../model";
-import { ClosablePanelType } from "./action/closable_action";
-import { addClosable } from "./action/closable_action";
-import { pause, resume, slowDown, speedUp } from "./action/speed_command";
+import { addClosable, ClosableAction, ClosablePanelType } from "./action/closable_action";
+import { ISpeedCommandAction, pause, resume, slowDown, speedUp } from "./action/speed_command";
 import { IStoreProps } from "./reducer";
 
 interface IMenuOwnProps {
@@ -113,16 +113,17 @@ class Menu extends React.PureComponent<MenuProps> {
     }
 }
 
-export default connect<IMenuStateProps, IMenuDispatchProps, IMenuOwnProps, IStoreProps>(
-    (state, ownProps): IMenuStateProps => ({
-        isPaused: state.speedCommand.isPaused,
-    }),
-    (dispatch): IMenuDispatchProps => ({
-        createImportExport: () => dispatch(addClosable(ClosablePanelType.ImportExport)),
-        createTutorial: () => dispatch(addClosable(ClosablePanelType.Tutorial)),
-        pause: () => dispatch(pause()),
-        resume: () => dispatch(resume()),
-        slowDown: () => dispatch(slowDown()),
-        speedUp: () => dispatch(speedUp()),
-    }),
-)(Menu);
+const mapStatesToProps = (state: IStoreProps): IMenuStateProps => ({
+    isPaused: state.speedCommand.isPaused,
+});
+
+const dispatchers = (dispatch: Dispatch<ClosableAction | ISpeedCommandAction>): IMenuDispatchProps => ({
+    createImportExport: () => dispatch(addClosable(ClosablePanelType.ImportExport)),
+    createTutorial: () => dispatch(addClosable(ClosablePanelType.Tutorial)),
+    pause: () => dispatch(pause()),
+    resume: () => dispatch(resume()),
+    slowDown: () => dispatch(slowDown()),
+    speedUp: () => dispatch(speedUp()),
+});
+
+export default connect(mapStatesToProps, dispatchers)(Menu);

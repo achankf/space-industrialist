@@ -123,10 +123,10 @@ class App extends React.Component<AppProps, IAppState> {
   }
 }
 
-export default connect<IAppDataProps, {}, IAppProps, IStoreProps>(
-  (state, props): IAppDataProps => ({
-    currentViewData: state.closableAction,
-    isPaused: state.speedCommand.isPaused,
-    updatePeriod: state.speedCommand.period,
-  }),
-)(App);
+const mapStateToProps = (state: IStoreProps): IAppDataProps => ({
+  currentViewData: state.closableAction,
+  isPaused: state.speedCommand.isPaused,
+  updatePeriod: state.speedCommand.period,
+});
+
+export default connect(mapStateToProps)(App);

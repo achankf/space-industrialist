@@ -1,10 +1,10 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Dispatch } from "../../node_modules/redux";
 import { Game } from "../game";
 import * as Model from "../model";
 import { MapDataKind } from "../model";
-import { ClosableArgs, ClosablePanelType } from "./action/closable_action";
-import { addClosable } from "./action/closable_action";
+import { addClosable, ClosableAction, ClosableArgs, ClosablePanelType } from "./action/closable_action";
 import ContentPanel from "./ContentPanel";
 import { routeString } from "./Route";
 import TitleBar from "./TitleBar";
@@ -86,9 +86,8 @@ class Selector extends React.PureComponent<SelectorProps> {
     }
 }
 
-export default connect<{}, ISelectorDispatchProps, ISelectorProps>(
-    undefined,
-    (dispatch): ISelectorDispatchProps => ({
-        addClosable: (type: ClosablePanelType, args: ClosableArgs) => dispatch(addClosable(type, args)),
-    }),
-)(Selector);
+const dispatchers = (dispatch: Dispatch<ClosableAction>): ISelectorDispatchProps => ({
+    addClosable: (type: ClosablePanelType, args: ClosableArgs) => dispatch(addClosable(type, args)),
+});
+
+export default connect(null, dispatchers)(Selector);

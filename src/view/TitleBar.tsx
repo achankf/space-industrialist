@@ -1,8 +1,19 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { close } from "./action/closable_action";
+import { Dispatch } from "../../node_modules/redux";
+import { ClosableAction, close } from "./action/closable_action";
 
-const TitleBar = (props: { title: string, closeWindow?: () => void }) => {
+interface ITitleBarProps {
+    title: string;
+}
+
+interface ITitleBarDispatcherProps {
+    closeWindow: () => void;
+}
+
+type TitleBarProps = ITitleBarProps & ITitleBarDispatcherProps;
+
+const TitleBar = (props: TitleBarProps) => {
     return <div className="titlebar">
         {props.title}
         <span>
@@ -15,7 +26,6 @@ const TitleBar = (props: { title: string, closeWindow?: () => void }) => {
     </div>;
 };
 
-export default connect<{ closeWindow?: () => void }>(
-    undefined,
-    (dispatch) => ({ closeWindow: () => dispatch(close()) }),
-)(TitleBar);
+const dispatchers = (dispatch: Dispatch<ClosableAction>): ITitleBarDispatcherProps => ({ closeWindow: () => dispatch(close()) });
+
+export default connect(undefined, dispatchers)(TitleBar);

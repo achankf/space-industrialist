@@ -3,11 +3,11 @@ import * as Immutable from "immutable";
 import * as React from "react";
 import { connect } from "react-redux";
 import { add, norm, project, SortedTrie, subtract } from "../../node_modules/myalgo-ts";
+import { Dispatch } from "../../node_modules/redux";
 import { Game } from "../game";
 import * as Model from "../model";
 import { colonyCmp } from "../model";
-import { addClosable, ClosablePanelType } from "./action/closable_action";
-import { IStoreProps } from "./reducer";
+import { addClosable, ClosableAction, ClosablePanelType } from "./action/closable_action";
 
 const MIN_GRID_SIZE = 50;
 const MAX_GRID_SIZE = 300;
@@ -459,12 +459,11 @@ class Map extends React.PureComponent<MapProps> {
     }
 }
 
-export default connect<{}, IMapDispatchProps, IMapOwnProps, IStoreProps>(
-    undefined,
-    (dispatch): IMapDispatchProps => ({
-        addFleetPanel: (fleet: Model.Fleet) => dispatch(addClosable(ClosablePanelType.Fleet, fleet)),
-        addPlanetPanel: (planet: Model.Planet) => dispatch(addClosable(ClosablePanelType.Planet, planet)),
-        addRoutePanel: (route: Model.IRouteSegment) => dispatch(addClosable(ClosablePanelType.Route, route)),
-        addSelector: (objs: Model.IMapData[]) => dispatch(addClosable(ClosablePanelType.Selector, objs)),
-    }),
-)(Map);
+const dispatchers = (dispatch: Dispatch<ClosableAction>): IMapDispatchProps => ({
+    addFleetPanel: (fleet: Model.Fleet) => dispatch(addClosable(ClosablePanelType.Fleet, fleet)),
+    addPlanetPanel: (planet: Model.Planet) => dispatch(addClosable(ClosablePanelType.Planet, planet)),
+    addRoutePanel: (route: Model.IRouteSegment) => dispatch(addClosable(ClosablePanelType.Route, route)),
+    addSelector: (objs: Model.IMapData[]) => dispatch(addClosable(ClosablePanelType.Selector, objs)),
+});
+
+export default connect(undefined, dispatchers)(Map);
