@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Game } from "../../game";
-import * as Model from "../../model";
+import { Fleet as FleetModel } from "../../model/fleet";
 import ContentPanel from "../ContentPanel";
 import TitleBar from "../TitleBar";
 import Window from "../Window";
@@ -9,7 +9,7 @@ import Route from "./Route";
 
 interface IFleetProps {
     gameWrapper: { game: Game };
-    fleet: Model.Fleet;
+    fleet: FleetModel;
 }
 
 enum CurrentView {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Colony } from "../../../model";
+import { Colony } from "../../../model/colony";
 
 export default ({ colony }: { colony: Colony }) => {
 

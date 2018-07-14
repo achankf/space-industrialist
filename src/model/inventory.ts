@@ -1,7 +1,8 @@
 import * as Immutable from "immutable";
-import * as Model from ".";
 import { sum } from "../../node_modules/myalgo-ts";
-import { Product } from "./product";
+import { Galaxy } from "./galaxy";
+import { Industry } from "./industry";
+import { NUM_PRODUCTS, Product } from "./product";
 
 export interface IInventory {
     id: number;
@@ -12,18 +13,18 @@ export interface IInventory {
 export class Inventory {
 
     // either generated on the fly or restored from some source
-    private demandSrcs: Model.Industry[] = [];
+    private demandSrcs: Industry[] = [];
     private usedSpace = sum(...this.inventory);
 
     constructor(
         public readonly id: number,
         private maxStorage = Infinity,
-        private inventory = new Array<number>(Model.NUM_PRODUCTS).fill(0),
+        private inventory = new Array<number>(NUM_PRODUCTS).fill(0),
     ) {
         console.assert(this.usedSpace <= maxStorage);
     }
 
-    public serialize(): Model.IInventory {
+    public serialize(): IInventory {
         return {
             id: this.id,
             inventory: this.inventory,
@@ -41,13 +42,13 @@ export class Inventory {
         return this.maxStorage;
     }
 
-    public getQty(productType: Model.Product) {
+    public getQty(productType: Product) {
         const qty = this.inventory[productType];
         console.assert(qty >= 0);
         return qty;
     }
 
-    public putGoods(productType: Model.Product, qty: number): number {
+    public putGoods(productType: Product, qty: number): number {
         console.assert(qty >= 0);
         console.assert(Number.isInteger(qty));
         const inStock = this.inventory[productType];
@@ -58,7 +59,7 @@ export class Inventory {
         return newTotal;
     }
 
-    public takeGoods(productType: Model.Product, qty: number): number {
+    public takeGoods(productType: Product, qty: number): number {
         console.assert(qty >= 0);
         console.assert(Number.isInteger(qty));
 
@@ -77,18 +78,18 @@ export class Inventory {
         return this.maxStorage >= this.usedSpace + qty;
     }
 
-    public addDemandSrc(demandSrc: Model.Industry) {
+    public addDemandSrc(demandSrc: Industry) {
         this.demandSrcs.push(demandSrc);
     }
 
-    public getDemand(galaxy: Model.Galaxy, product: Model.Product): number {
-        const demands = new Array<number>(Model.NUM_PRODUCTS).fill(0);
+    public getDemand(galaxy: Galaxy, product: Product): number {
+        const demands = new Array<number>(NUM_PRODUCTS).fill(0);
         for (const src of this.demandSrcs) {
 
             const prodCap = src.prodCap(galaxy);
 
             const allDemands = Immutable
-                .Seq(Model.Industry.getDemandProducts(src.productType))
+                .Seq(Industry.getDemandProducts(src.productType))
                 .map((x) => {
                     return {
                         neededKinds: x,
@@ -131,7 +132,7 @@ export class Inventory {
         }
     }
 
-    public consume(products: Set<Model.Product> | Immutable.Set<Model.Product>, qty: number) {
+    public consume(products: Set<Product> | Immutable.Set<Product>, qty: number) {
         console.assert(qty >= 0);
 
         const sorted = Array

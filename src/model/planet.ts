@@ -1,18 +1,20 @@
-import * as Model from ".";
+import { ILocatable, MapDataKind } from ".";
+import { Colony } from "./colony";
+import { RawMaterial } from "./product";
 
 export interface IPlanet {
     id: number;
-    resource: Model.RawMaterial;
+    resource: RawMaterial;
 }
 
-export class Planet implements Model.ILocatable {
+export class Planet implements ILocatable {
 
-    public readonly kind = Model.MapDataKind.Planet;
+    public readonly kind = MapDataKind.Planet;
 
     constructor(
         public readonly id: number,
-        public readonly resource: Model.RawMaterial,
-        private colony?: Model.Colony,
+        public readonly resource: RawMaterial,
+        private colony?: Colony,
     ) { }
 
     public serialize(): IPlanet {
@@ -22,7 +24,7 @@ export class Planet implements Model.ILocatable {
         };
     }
 
-    public colonized(colony: Model.Colony) {
+    public colonized(colony: Colony) {
         this.colony = colony;
     }
 

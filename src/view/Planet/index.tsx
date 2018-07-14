@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as Model from "../../model";
+import { Planet } from "../../model/planet";
 import ContentPanel from "../ContentPanel";
 import TitleBar from "../TitleBar";
 import Window from "../Window";
@@ -16,7 +16,7 @@ enum CurrentViewType {
 
 interface IPlanetProps {
     game: Game;
-    planet: Model.Planet;
+    planet: Planet;
 }
 
 type PlanetProps = IPlanetProps;

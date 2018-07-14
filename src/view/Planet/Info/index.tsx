@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Game } from "../../../game";
-import * as Model from "../../../model";
+import { POWER_PLANT_COST } from "../../../model";
+import { Planet } from "../../../model/planet";
 import ColonizeButton from "./ColonizeButton";
 import ColonyDetails from "./ColonyDetails";
 import Coor from "./Coor";
@@ -8,7 +9,7 @@ import Resource from "./Resource";
 
 interface IInfoOwnProps {
     game: Game;
-    planet: Model.Planet;
+    planet: Planet;
 }
 
 type InfoProps = IInfoOwnProps;
@@ -62,10 +63,10 @@ export default class Info extends React.Component<InfoProps> {
 
         const colony = planet.getColony()!;
 
-        const isOk = e.ctrlKey || confirm(`Are you sure to invest in power planet at planet ${planet.id}? This action costs $${Model.POWER_PLANT_COST}. (press ctrl while clicking the button suppresses this message)`);
+        const isOk = e.ctrlKey || confirm(`Are you sure to invest in power planet at planet ${planet.id}? This action costs $${POWER_PLANT_COST}. (press ctrl while clicking the button suppresses this message)`);
         if (isOk) {
             galaxy.expandPowerPlant(colony);
-            galaxy.withdraw(Model.POWER_PLANT_COST);
+            galaxy.withdraw(POWER_PLANT_COST);
         }
     }
 }

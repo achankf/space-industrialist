@@ -1,6 +1,10 @@
 import * as Immutable from "immutable";
-import * as Model from ".";
+import { FleetState, ILocatable, MapDataKind } from ".";
 import { equal, subtract, sum } from "../../node_modules/myalgo-ts";
+import { Colony } from "./colony";
+import { Galaxy } from "./galaxy";
+import { Inventory } from "./inventory";
+import { allProducts, NUM_PRODUCTS, Product } from "./product";
 
 const PI_OVER_2 = Math.PI / 2;
 const SPEED = 0.3;
@@ -11,19 +15,19 @@ export interface IFleet {
     isRetiring: boolean;
     route: number[];
     routeAt: number;
-    state: Model.FleetState;
+    state: FleetState;
 }
 
-export class Fleet implements Model.ILocatable {
+export class Fleet implements ILocatable {
 
-    public readonly kind = Model.MapDataKind.Fleet;
+    public readonly kind = MapDataKind.Fleet;
 
     constructor(
         public readonly id: number,
-        private cargo: Model.Inventory,
-        private route: Model.Colony[] = [],
+        private cargo: Inventory,
+        private route: Colony[] = [],
         private routeAt: number = 0,
-        private state = Model.FleetState.Move,
+        private state = FleetState.Move,
         private isRetiring = false,
     ) { }
 
@@ -50,7 +54,7 @@ export class Fleet implements Model.ILocatable {
         return this.routeAt;
     }
 
-    public getSpeed(galaxy: Model.Galaxy) {
+    public getSpeed(galaxy: Galaxy) {
         const from = this.getStop();
         console.assert(from !== undefined);
         const to = this.getNextStop();
@@ -62,25 +66,25 @@ export class Fleet implements Model.ILocatable {
         return SPEED * fuelBonus2;
     }
 
-    public operate(galaxy: Model.Galaxy) {
+    public operate(galaxy: Galaxy) {
         switch (this.state) {
-            case Model.FleetState.Hold:
+            case FleetState.Hold:
                 // do nothing
                 break;
-            case Model.FleetState.Docked:
+            case FleetState.Docked:
                 this.handleDocked(galaxy);
                 this.setMoveNextStop();
                 break;
-            case Model.FleetState.Move:
+            case FleetState.Move:
                 this.handleMove(galaxy);
                 break;
         }
     }
 
-    public setRoute(...route: Model.Colony[]) {
+    public setRoute(...route: Colony[]) {
         console.assert(route.length > 0);
         this.route = route;
-        this.state = Model.FleetState.Hold;
+        this.state = FleetState.Hold;
     }
 
     public resetRoute() {
@@ -89,9 +93,9 @@ export class Fleet implements Model.ILocatable {
 
     public start() {
         if (this.route.length > 0) {
-            this.state = Model.FleetState.Move;
+            this.state = FleetState.Move;
         } else {
-            console.assert(this.state === Model.FleetState.Hold);
+            console.assert(this.state === FleetState.Hold);
         }
     }
 
@@ -103,7 +107,7 @@ export class Fleet implements Model.ILocatable {
         return this.isRetiring;
     }
 
-    public getAngle(galaxy: Model.Galaxy) {
+    public getAngle(galaxy: Galaxy) {
         if (this.route.length > 1) {
             const curPos = galaxy.getCoor(this);
             const stop = galaxy.getCoor(this.getStop());
@@ -125,13 +129,13 @@ export class Fleet implements Model.ILocatable {
         return 0;
     }
 
-    private partitionCargo(routeDemands: number[], lowToHigh: Model.Product[]) {
+    private partitionCargo(routeDemands: number[], lowToHigh: Product[]) {
 
         const cargoSpace = this.cargo.getEmptySpace();
         // this method assign at least 1 unit space per commodity
-        console.assert(cargoSpace >= Model.allProducts().length);
+        console.assert(cargoSpace >= allProducts().length);
         const totalDemand = sum(...routeDemands);
-        const partition = new Map<Model.Product, number>();
+        const partition = new Map<Product, number>();
 
         if (totalDemand === 0) {
             return partition;
@@ -159,14 +163,13 @@ export class Fleet implements Model.ILocatable {
         return this.route[next];
     }
 
-    private handleDocked(galaxy: Model.Galaxy) {
+    private handleDocked(galaxy: Galaxy) {
 
         const stop = this.getStop();
         const next = this.getNextStop();
 
         // sum all downstream demands from the next stop
-        const routeDemands = Model
-            .allProducts()
+        const routeDemands = allProducts()
             .reduce((acc, product) => {
                 // get all downstream consumers (end-points of shortest paths)
                 const deficitSum = sum(...galaxy
@@ -175,9 +178,9 @@ export class Fleet implements Model.ILocatable {
 
                 acc[product] += deficitSum;
                 return acc;
-            }, new Array<number>(Model.NUM_PRODUCTS).fill(0));
+            }, new Array<number>(NUM_PRODUCTS).fill(0));
 
-        const goodsUnloaded = new Array<number>(Model.NUM_PRODUCTS).fill(0);
+        const goodsUnloaded = new Array<number>(NUM_PRODUCTS).fill(0);
 
         // sell goods
         for (const [product, qty] of this.cargo.getAllQty()) {
@@ -192,7 +195,7 @@ export class Fleet implements Model.ILocatable {
                     this.cargo,
                     product,
                     qty,
-                    0); // Model.Market.basePrice(product));
+                    0); // Market.basePrice(product));
             goodsUnloaded[product] += unloaded;
         }
 
@@ -202,8 +205,7 @@ export class Fleet implements Model.ILocatable {
             return;
         }
 
-        const lowToHigh = Model
-            .allProducts()
+        const lowToHigh = allProducts()
             .sort((a, b) => routeDemands[a] - routeDemands[b]);
 
         // buy goods - pass 1, try to spread out goods instead of filling
@@ -239,7 +241,7 @@ export class Fleet implements Model.ILocatable {
                         this.cargo,
                         product,
                         qty,
-                        Infinity); // Model.Market.basePrice(product));
+                        Infinity); // Market.basePrice(product));
             }
         }
 
@@ -273,7 +275,7 @@ export class Fleet implements Model.ILocatable {
                     this.cargo,
                     product,
                     qty,
-                    Infinity); // Model.Market.basePrice(product));
+                    Infinity); // Market.basePrice(product));
         }
     }
 
@@ -292,10 +294,10 @@ export class Fleet implements Model.ILocatable {
     private setMoveNextStop() {
         // set next stop and then travel
         this.routeAt = this.nextStopIdx();
-        this.state = Model.FleetState.Move;
+        this.state = FleetState.Move;
     }
 
-    private handleMove(galaxy: Model.Galaxy) {
+    private handleMove(galaxy: Galaxy) {
 
         const stop = this.route[this.routeAt];
         const dest = galaxy.getCoor(stop);
@@ -303,7 +305,7 @@ export class Fleet implements Model.ILocatable {
         const { nowAt } = galaxy.move(this, dest, this.getSpeed(galaxy));
 
         if (equal(nowAt, dest)) {
-            this.state = Model.FleetState.Docked;
+            this.state = FleetState.Docked;
         }
     }
 }

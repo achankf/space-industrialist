@@ -2,8 +2,9 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "../../node_modules/redux";
 import { Game } from "../game";
-import * as Model from "../model";
-import { MapDataKind } from "../model";
+import { IMapData, IRouteSegment, MapDataKind } from "../model";
+import { Fleet as FleetModel } from "../model/fleet";
+import { Planet as PlanetModel } from "../model/planet";
 import { addClosable, ClosableAction, ClosableArgs, ClosablePanelType } from "./action/closable_action";
 import ContentPanel from "./ContentPanel";
 import { routeString } from "./Route";
@@ -12,7 +13,7 @@ import Window from "./Window";
 
 interface ISelectorProps {
     game: Game;
-    objs: Model.IMapData[];
+    objs: IMapData[];
 }
 
 interface ISelectorDispatchProps {
@@ -41,7 +42,7 @@ class Selector extends React.PureComponent<SelectorProps> {
                 switch (obj.kind) {
                     case MapDataKind.Fleet:
                         {
-                            const fleet = obj as Model.Fleet;
+                            const fleet = obj as FleetModel;
                             label = `Trader ${fleet.id}`;
                             color = "yellow";
                             click = () => this.props.addClosable(ClosablePanelType.Fleet, fleet);
@@ -49,7 +50,7 @@ class Selector extends React.PureComponent<SelectorProps> {
                         break;
                     case MapDataKind.Planet:
                         {
-                            const planet = obj as Model.Planet;
+                            const planet = obj as PlanetModel;
                             label = `Planet ${planet.id}`;
                             color = "green";
                             click = () => this.props.addClosable(ClosablePanelType.Planet, planet);
@@ -57,7 +58,7 @@ class Selector extends React.PureComponent<SelectorProps> {
                         break;
                     case MapDataKind.RouteSegment:
                         {
-                            const route = obj as Model.IRouteSegment;
+                            const route = obj as IRouteSegment;
                             label = `${routeString(game, route)}`;
                             color = "darkcyan";
                             click = () => this.props.addClosable(ClosablePanelType.Route, route);

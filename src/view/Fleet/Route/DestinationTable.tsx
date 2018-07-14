@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Game } from "../../../game";
-import * as Model from "../../../model";
+import { Fleet } from "../../../model/fleet";
 
-export default ({ fleet, game }: { fleet: Model.Fleet, game: Game }) => {
+export default ({ fleet, game }: { fleet: Fleet, game: Game }) => {
 
     const galaxy = game.getReader();
     const route = fleet.getRoute();

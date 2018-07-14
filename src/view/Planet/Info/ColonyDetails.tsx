@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Game } from "../../../game";
-import * as Model from "../../../model";
+import { Colony } from "../../../model/colony";
 import EncourageGrowth from "./EncourageGrowth";
 import ExpandButton from "./ExpandButton";
 import GrowthRate from "./GrowthRate";
@@ -9,7 +9,7 @@ import PowerConsumer from "./PowerConsumer";
 import PowerProducer from "./PowerProducer";
 
 export default ({ colony, expandPowerPlant, game }: {
-    colony: Model.Colony,
+    colony: Colony,
     expandPowerPlant: (e: React.MouseEvent<HTMLButtonElement>) => void,
     game: Game,
 }) => {

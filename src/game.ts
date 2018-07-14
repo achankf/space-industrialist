@@ -1,9 +1,14 @@
 import Dexie from "dexie";
-import * as Model from "./model";
+import { CoorT, ILocatable, MapDataKind } from "./model";
+import { Colony } from "./model/colony";
+import { Fleet } from "./model/fleet";
+import { Galaxy, IGalaxySaveData } from "./model/galaxy";
+import { Industry } from "./model/industry";
+import { Planet } from "./model/planet";
+import { Product } from "./model/product";
 
 export interface ISaveData {
-    galaxySave: Model.IGalaxySaveData;
-    // mapViewSave: View.IMapViewSaveData;
+    galaxySave: IGalaxySaveData;
 }
 
 class DB extends Dexie {
@@ -34,7 +39,7 @@ export class Game {
     private galaxyReadProxy!: GalaxyReadProxy;
     private galaxyWriteProxy!: GalaxyWriteProxy;
 
-    private galaxy!: Model.Galaxy;
+    private galaxy!: Galaxy;
     private db = new DB();
     private isJustReloadedLocal = true;
 
@@ -71,14 +76,14 @@ export class Game {
 
         if (saveData) {
             try {
-                this.galaxy = Model.Galaxy.createFrom(saveData.galaxySave);
+                this.galaxy = Galaxy.createFrom(saveData.galaxySave);
                 isNewGame = false;
             } catch (e) {
-                this.galaxy = new Model.Galaxy();
+                this.galaxy = new Galaxy();
                 this.galaxy.addPlanets(20, 1);
             }
         } else {
-            this.galaxy = new Model.Galaxy();
+            this.galaxy = new Galaxy();
             this.galaxy.addPlanets(20, 1);
         }
 
@@ -106,21 +111,21 @@ export class Game {
  * All views should use this class to interact with the Galaxy object.
  */
 export class GalaxyReadProxy {
-    constructor(private galaxy: Model.Galaxy) { }
+    constructor(private galaxy: Galaxy) { }
 
-    public exists = (obj: Model.ILocatable) => {
+    public exists = (obj: ILocatable) => {
         return this.galaxy.exists(obj);
     }
 
-    public getFleetSpeed = (fleet: Model.Fleet) => {
+    public getFleetSpeed = (fleet: Fleet) => {
         return fleet.getSpeed(this.galaxy);
     }
 
-    public getCoor = (obj: Model.ILocatable | Model.Colony) => {
+    public getCoor = (obj: ILocatable | Colony) => {
         return this.galaxy.getCoor(obj);
     }
 
-    public searchNearbyObjs = (at: Model.CoorT, radius: number = 0, minDistance = 0) => {
+    public searchNearbyObjs = (at: CoorT, radius: number = 0, minDistance = 0) => {
         return this.galaxy.searchNearbyObjs(at, radius, minDistance);
     }
 
@@ -132,19 +137,19 @@ export class GalaxyReadProxy {
         return this.galaxy.getObjs();
     }
 
-    public getAngle = (fleet: Model.Fleet) => {
+    public getAngle = (fleet: Fleet) => {
         return fleet.getAngle(this.galaxy);
     }
 
-    public getIndustries = (colony: Model.Colony) => {
+    public getIndustries = (colony: Colony) => {
         return this.galaxy.getIndustries(colony);
     }
 
-    public prodCap = (industry: Model.Industry) => {
+    public prodCap = (industry: Industry) => {
         return industry.prodCap(this.galaxy);
     }
 
-    public usedEnergy = (industry: Model.Industry) => {
+    public usedEnergy = (industry: Industry) => {
         return industry.usedEnergy(this.galaxy);
     }
 
@@ -152,11 +157,11 @@ export class GalaxyReadProxy {
         return this.galaxy.getNumColonists();
     }
 
-    public growthRate = (colony: Model.Colony) => {
+    public growthRate = (colony: Colony) => {
         return colony.growthRate(this.galaxy);
     }
 
-    public getTotalPowerUsage = (colony: Model.Colony) => {
+    public getTotalPowerUsage = (colony: Colony) => {
         return colony.getTotalPowerUsage(this.galaxy);
     }
 
@@ -164,39 +169,39 @@ export class GalaxyReadProxy {
         return this.galaxy.getMoney();
     }
 
-    public canExpandPowerPlant = (colony: Model.Colony) => {
+    public canExpandPowerPlant = (colony: Colony) => {
         return colony.canExpandPowerPlant(this.galaxy);
     }
 
-    public getPowerUsageEff = (colony: Model.Colony) => {
+    public getPowerUsageEff = (colony: Colony) => {
         return colony.getPowerUsageEff(this.galaxy);
     }
 
-    public getEnergyPrice = (colony: Model.Colony) => {
+    public getEnergyPrice = (colony: Colony) => {
         return colony.getEnergyPrice(this.galaxy);
     }
 
-    public getGalacticDemands = (productType: Model.Product) => {
+    public getGalacticDemands = (productType: Product) => {
         return this.galaxy.getGalacticDemands(productType);
     }
 
-    public getGalacticProdCap = (productType: Model.Product) => {
+    public getGalacticProdCap = (productType: Product) => {
         return this.galaxy.getGalacticProdCap(productType);
     }
 
-    public getGalacticSupplies = (productType: Model.Product) => {
+    public getGalacticSupplies = (productType: Product) => {
         return this.galaxy.getGalacticSupplies(productType);
     }
 
-    public getPlanet = (at: Model.CoorT) => {
-        return this.galaxy.getObj(at, Model.MapDataKind.Planet);
+    public getPlanet = (at: CoorT) => {
+        return this.galaxy.getObj(at, MapDataKind.Planet);
     }
 
-    public getNumUsedTraders = (from: Model.Colony, to: Model.Colony) => {
+    public getNumUsedTraders = (from: Colony, to: Colony) => {
         return this.galaxy.getNumUsedTraders(from, to);
     }
 
-    public getRouteFuelEff = (from: Model.Colony, to: Model.Colony) => {
+    public getRouteFuelEff = (from: Colony, to: Colony) => {
         return this.galaxy.getRouteFuelEff(from, to);
     }
 
@@ -216,7 +221,7 @@ export class GalaxyReadProxy {
         return this.galaxy.getScore();
     }
 
-    public isRetired = (fleet: Model.Fleet) => {
+    public isRetired = (fleet: Fleet) => {
         return fleet.isRetire();
     }
 
@@ -227,13 +232,13 @@ export class GalaxyReadProxy {
 
 export class GalaxyWriteProxy {
 
-    constructor(private galaxy: Model.Galaxy) { }
+    constructor(private galaxy: Galaxy) { }
 
-    public colonizePlanet = (planet: Model.Planet, population: number) => {
+    public colonizePlanet = (planet: Planet, population: number) => {
         return this.galaxy.colonizePlanet(planet, population);
     }
 
-    public expandPowerPlant = (colony: Model.Colony) => {
+    public expandPowerPlant = (colony: Colony) => {
         colony.expandPowerPlanet(this.galaxy);
     }
 
@@ -241,15 +246,15 @@ export class GalaxyWriteProxy {
         this.galaxy.withdraw(amount);
     }
 
-    public shutdownIndustry = (colony: Model.Colony, industry: Model.Industry) => {
+    public shutdownIndustry = (colony: Colony, industry: Industry) => {
         this.galaxy.shutdownIndustry(colony, industry);
     }
 
-    public addIndustry = (productType: Model.Product, colony: Model.Colony) => {
+    public addIndustry = (productType: Product, colony: Colony) => {
         return this.galaxy.addIndustry(productType, colony);
     }
 
-    public addTradeFleet = (from: Model.Colony, to: Model.Colony) => {
+    public addTradeFleet = (from: Colony, to: Colony) => {
         return this.galaxy.addTradeFleet(from, to);
     }
 
@@ -261,7 +266,7 @@ export class GalaxyWriteProxy {
         return this.galaxy.turn();
     }
 
-    public retire = (fleet: Model.Fleet) => {
+    public retire = (fleet: Fleet) => {
         fleet.retire();
     }
 }

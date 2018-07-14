@@ -5,8 +5,12 @@ import { connect } from "react-redux";
 import { add, norm, project, SortedTrie, subtract } from "../../node_modules/myalgo-ts";
 import { Dispatch } from "../../node_modules/redux";
 import { Game } from "../game";
-import * as Model from "../model";
-import { colonyCmp } from "../model";
+import { CoorT, IMapData, IRouteSegment, MapDataKind } from "../model";
+import { Colony } from "../model/colony";
+import { Fleet as FleetModel } from "../model/fleet";
+import { colonyCmp } from "../model/galaxy";
+import { Planet as PlanetModel } from "../model/planet";
+import { Product, RawMaterial } from "../model/product";
 import { addClosable, ClosableAction, ClosablePanelType } from "./action/closable_action";
 
 const MIN_GRID_SIZE = 50;
@@ -19,10 +23,10 @@ interface IMapViewSaveData {
 }
 
 interface IMapDispatchProps {
-    addFleetPanel: (fleet: Model.Fleet) => void;
-    addPlanetPanel: (planet: Model.Planet) => void;
-    addRoutePanel: (route: Model.IRouteSegment) => void;
-    addSelector: (objs: Model.IMapData[]) => void;
+    addFleetPanel: (fleet: FleetModel) => void;
+    addPlanetPanel: (planet: PlanetModel) => void;
+    addRoutePanel: (route: IRouteSegment) => void;
+    addSelector: (objs: IMapData[]) => void;
 }
 
 interface IMapOwnProps {
@@ -145,7 +149,7 @@ class Map extends React.PureComponent<MapProps> {
             .groupBy(([x]) => x.kind);
 
         const drawFleets = () => {
-            const fleetGroup = groups.get(Model.MapDataKind.Fleet);
+            const fleetGroup = groups.get(MapDataKind.Fleet);
             if (!fleetGroup) {
                 return;
             }
@@ -157,7 +161,7 @@ class Map extends React.PureComponent<MapProps> {
             for (const [obj, coor] of fleets) {
                 const [vpX, vpY] = this.toVpCoor(coor);
 
-                const fleet = obj as Model.Fleet;
+                const fleet = obj as FleetModel;
                 const angle = galaxy.getAngle(fleet);
                 ctx.save();
                 ctx.beginPath();
@@ -172,14 +176,14 @@ class Map extends React.PureComponent<MapProps> {
         };
 
         const drawPlanets = () => {
-            const planetGroup = groups.get(Model.MapDataKind.Planet);
+            const planetGroup = groups.get(MapDataKind.Planet);
             if (!planetGroup) {
                 throw new Error("game generation should generate at least 1 planet");
             }
-            const planetArray = Array.from(planetGroup.values()) as Array<[Model.Planet, Model.CoorT]>;
+            const planetArray = Array.from(planetGroup.values()) as Array<[PlanetModel, CoorT]>;
             const allPlanets = Immutable
                 .Seq(planetArray)
-                .groupBy(([x]) => (x as Model.Planet).resource);
+                .groupBy(([x]) => (x as PlanetModel).resource);
 
             ctx.save();
 
@@ -188,7 +192,7 @@ class Map extends React.PureComponent<MapProps> {
             ctx.strokeStyle = "yellow";
             const radius = RADIUS * this.gridSize;
 
-            const drawPlanetCircle = (color: string, resource: Model.RawMaterial) => {
+            const drawPlanetCircle = (color: string, resource: RawMaterial) => {
                 const planetByResource = allPlanets.get(resource);
                 if (!planetByResource) {
                     console.assert(false, "all planets should be distributed about evenly in terms of raw material types"); // TODO validate this
@@ -204,10 +208,10 @@ class Map extends React.PureComponent<MapProps> {
                 }
             };
 
-            drawPlanetCircle("green", Model.Product.Crop);
-            drawPlanetCircle("brown", Model.Product.Metal);
-            drawPlanetCircle("darkcyan", Model.Product.Gem);
-            drawPlanetCircle("orange", Model.Product.Fuel);
+            drawPlanetCircle("green", Product.Crop);
+            drawPlanetCircle("brown", Product.Metal);
+            drawPlanetCircle("darkcyan", Product.Gem);
+            drawPlanetCircle("orange", Product.Fuel);
             ctx.restore();
 
             // draw ids
@@ -256,12 +260,12 @@ class Map extends React.PureComponent<MapProps> {
         ctx.lineWidth = 1;
         ctx.strokeStyle = "cyan";
 
-        const drawn = new SortedTrie<Model.Colony, [Model.Colony, Model.Colony], true>(colonyCmp);
+        const drawn = new SortedTrie<Colony, [Colony, Colony], true>(colonyCmp);
 
         for (const [u, vs] of tradeRoutes) {
             for (const v of vs) {
 
-                const edge: [Model.Colony, Model.Colony] = [u, v];
+                const edge: [Colony, Colony] = [u, v];
                 if (drawn.has(edge)) {
                     continue;
                 }
@@ -380,14 +384,14 @@ class Map extends React.PureComponent<MapProps> {
             case 1: {
                 const obj = nearbyObjs[0];
                 switch (obj.kind) {
-                    case Model.MapDataKind.Fleet:
-                        this.props.addFleetPanel(obj as Model.Fleet);
+                    case MapDataKind.Fleet:
+                        this.props.addFleetPanel(obj as FleetModel);
                         break;
-                    case Model.MapDataKind.Planet:
-                        this.props.addPlanetPanel(obj as Model.Planet);
+                    case MapDataKind.Planet:
+                        this.props.addPlanetPanel(obj as PlanetModel);
                         break;
-                    case Model.MapDataKind.RouteSegment:
-                        this.props.addRoutePanel(obj as Model.IRouteSegment);
+                    case MapDataKind.RouteSegment:
+                        this.props.addRoutePanel(obj as IRouteSegment);
                         break;
                 }
                 break;
@@ -460,10 +464,10 @@ class Map extends React.PureComponent<MapProps> {
 }
 
 const dispatchers = (dispatch: Dispatch<ClosableAction>): IMapDispatchProps => ({
-    addFleetPanel: (fleet: Model.Fleet) => dispatch(addClosable(ClosablePanelType.Fleet, fleet)),
-    addPlanetPanel: (planet: Model.Planet) => dispatch(addClosable(ClosablePanelType.Planet, planet)),
-    addRoutePanel: (route: Model.IRouteSegment) => dispatch(addClosable(ClosablePanelType.Route, route)),
-    addSelector: (objs: Model.IMapData[]) => dispatch(addClosable(ClosablePanelType.Selector, objs)),
+    addFleetPanel: (fleet: FleetModel) => dispatch(addClosable(ClosablePanelType.Fleet, fleet)),
+    addPlanetPanel: (planet: PlanetModel) => dispatch(addClosable(ClosablePanelType.Planet, planet)),
+    addRoutePanel: (route: IRouteSegment) => dispatch(addClosable(ClosablePanelType.Route, route)),
+    addSelector: (objs: IMapData[]) => dispatch(addClosable(ClosablePanelType.Selector, objs)),
 });
 
 export default connect(undefined, dispatchers)(Map);

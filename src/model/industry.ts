@@ -1,5 +1,7 @@
-import * as Model from ".";
-import { Product } from "./product";
+import { Colony } from "./colony";
+import { Galaxy } from "./galaxy";
+import { Inventory } from "./inventory";
+import { DEMAND_PRODUCTS, FLAT_DEMAND_PRODUCTS, IOpDemand, Product } from "./product";
 
 const BASE_YIELD = 10;
 const MAX_OP_PRODUCTS = 10;
@@ -20,24 +22,24 @@ export interface IIndustry {
     colonyId: number;
     id: number;
     operationalEff: number;
-    productType: Model.Product;
+    productType: Product;
     scale: number;
 }
 
 export class Industry {
 
     public static getDemandProducts(productType: Product) {
-        return Model.DEMAND_PRODUCTS[productType];
+        return DEMAND_PRODUCTS[productType];
     }
 
     public static getFlatDemandProducts(productType: Product) {
-        return Model.FLAT_DEMAND_PRODUCTS[productType];
+        return FLAT_DEMAND_PRODUCTS[productType];
     }
 
     constructor(
         public readonly id: number,
         public readonly productType: Product,
-        public readonly colony: Model.Colony,
+        public readonly colony: Colony,
         private scale = 1,
         private operationalEff = MIN_OP_EFF, // 0.1 to 1
     ) { }
@@ -64,7 +66,7 @@ export class Industry {
         return this.scale;
     }
 
-    public operate(galaxy: Model.Galaxy) {
+    public operate(galaxy: Galaxy) {
 
         const isRunProd = this.isRunProd(galaxy);
 
@@ -91,11 +93,11 @@ export class Industry {
         return MIN_FIXED_COST + FIXED_COST_OFFSET * costReduction;
     }
 
-    public usedEnergy(galaxy: Model.Galaxy) {
+    public usedEnergy(galaxy: Galaxy) {
         return this.getPowerUsage() * this.colony.getPowerUsageEff(galaxy);
     }
 
-    public getOpDemand(): Model.IOpDemand {
+    public getOpDemand(): IOpDemand {
         const qty = MAX_OP_PRODUCTS * this.scale;
         switch (this.productType) {
             case Product.Crop:
@@ -114,7 +116,7 @@ export class Industry {
         }
     }
 
-    public prodCap(galaxy: Model.Galaxy) {
+    public prodCap(galaxy: Galaxy) {
         const operationalFactor = 1 + this.operationalEff * OP_FACTOR_BONUS;
         const energyBonus = 1 + this.colony.getPowerUsageEff(galaxy) * ENERGY_BONUS;
         return Math.max(1, Math.ceil(this.scale * BASE_YIELD * operationalFactor * energyBonus));
@@ -128,7 +130,7 @@ export class Industry {
         return this.getScale() * BASE_POWER_USAGE;
     }
 
-    private isRunProd(galaxy: Model.Galaxy) {
+    private isRunProd(galaxy: Galaxy) {
         const productType = this.productType;
         const demandQty = 10 * galaxy.getGalacticDemands(productType);
         const supplyQty = this.colony.getSupply(productType);
@@ -140,7 +142,7 @@ export class Industry {
         return demandQty > inStock + supplyQty;
     }
 
-    private updateModifers(isRunProd: boolean, inventory: Model.Inventory) {
+    private updateModifers(isRunProd: boolean, inventory: Inventory) {
 
         const opDemand = this.getOpDemand();
 
@@ -155,7 +157,7 @@ export class Industry {
         }
     }
 
-    private produce(galaxy: Model.Galaxy, inventory: Model.Inventory) {
+    private produce(galaxy: Galaxy, inventory: Inventory) {
 
         const demandProducts = Industry.getFlatDemandProducts(this.productType);
         const prodCap = this.prodCap(galaxy);

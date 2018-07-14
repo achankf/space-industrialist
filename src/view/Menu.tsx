@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "../../node_modules/redux";
 import { Game } from "../game";
-import * as Model from "../model";
+import { TRADER_COST } from "../model";
 import { addClosable, ClosableAction, ClosablePanelType } from "./action/closable_action";
 import { ISpeedCommandAction, pause, resume, slowDown, speedUp } from "./action/speed_command";
 import { IStoreProps } from "./reducer";
@@ -91,12 +91,12 @@ class Menu extends React.PureComponent<MenuProps> {
     }
 
     private addTrader = (e: React.MouseEvent<HTMLButtonElement>) => {
-        const isOk = e.ctrlKey || confirm(`Are you sure? This action costs $${Model.TRADER_COST}. (press ctrl while clicking the button suppresses this message)`);
+        const isOk = e.ctrlKey || confirm(`Are you sure? This action costs $${TRADER_COST}. (press ctrl while clicking the button suppresses this message)`);
         if (isOk) {
             const game = this.props.gameWrapper.game;
             const galaxy = game.getWriter();
             galaxy.addTrader();
-            galaxy.withdraw(Model.TRADER_COST);
+            galaxy.withdraw(TRADER_COST);
         }
     }
 

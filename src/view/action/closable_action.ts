@@ -1,4 +1,6 @@
-import * as Model from "../../model";
+import { IMapData, IRouteSegment } from "../../model";
+import { Fleet } from "../../model/fleet";
+import { Planet } from "../../model/planet";
 
 export enum ClosableActionType {
     Switch = "ClosableActionType_Switch",
@@ -14,7 +16,7 @@ export enum ClosablePanelType {
     Tutorial,
 }
 
-export type ClosableArgs = undefined | Model.IMapData[] | Model.Planet | Model.Fleet | Model.IRouteSegment;
+export type ClosableArgs = undefined | IMapData[] | Planet | Fleet | IRouteSegment;
 
 export type ClosableComponent = React.Component;
 

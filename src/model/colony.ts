@@ -1,6 +1,11 @@
 import * as Immutable from "immutable";
-import * as Model from ".";
+import { YEAR_PER_TICK } from ".";
 import { average, sum, toIt } from "../../node_modules/myalgo-ts";
+import { Galaxy } from "./galaxy";
+import { Industry } from "./industry";
+import { Inventory } from "./inventory";
+import { Planet } from "./planet";
+import { allProducts, NUM_PRODUCTS, Product } from "./product";
 
 const POWER_POTENTIAL = 200;
 const PRICE_EXP_LOW = 0.7;
@@ -9,15 +14,15 @@ const DAYS_KEEP_GOODS = 10; // number of days to keep consumption
 const MIN_PRICE_PERCENT = 0.4; // percent of the base price
 
 const COLONY_UNIT_DEMAND = (() => {
-    const ret = new Array<number>(Model.NUM_PRODUCTS).fill(0);
-    ret[Model.Product.Food] = 10;
-    ret[Model.Product.Drink] = 10;
-    ret[Model.Product.Apparel] = 10;
-    ret[Model.Product.Medicine] = 10;
-    ret[Model.Product.Accessory] = 5;
-    ret[Model.Product.Furniture] = 5;
-    ret[Model.Product.Gadget] = 5;
-    ret[Model.Product.Vehicle] = 5;
+    const ret = new Array<number>(NUM_PRODUCTS).fill(0);
+    ret[Product.Food] = 10;
+    ret[Product.Drink] = 10;
+    ret[Product.Apparel] = 10;
+    ret[Product.Medicine] = 10;
+    ret[Product.Accessory] = 5;
+    ret[Product.Furniture] = 5;
+    ret[Product.Gadget] = 5;
+    ret[Product.Vehicle] = 5;
     return ret;
 })();
 
@@ -57,69 +62,69 @@ export class Colony {
         return price;
     }
 
-    public static elasticity(product: Model.Product) {
+    public static elasticity(product: Product) {
         switch (product) {
-            case Model.Product.Crop:
-            case Model.Product.Metal:
-            case Model.Product.Gem:
-            case Model.Product.Fuel:
+            case Product.Crop:
+            case Product.Metal:
+            case Product.Gem:
+            case Product.Fuel:
                 return 1;
-            case Model.Product.Food:
+            case Product.Food:
                 return 1.5; // very elastic
-            case Model.Product.Drink:
-            case Model.Product.Apparel:
-            case Model.Product.Medicine:
+            case Product.Drink:
+            case Product.Apparel:
+            case Product.Medicine:
                 return 1;
-            case Model.Product.Accessory:
-            case Model.Product.Furniture:
-            case Model.Product.Gadget:
-            case Model.Product.Vehicle:
+            case Product.Accessory:
+            case Product.Furniture:
+            case Product.Gadget:
+            case Product.Vehicle:
                 return 0.4;
-            case Model.Product.Fiber: // intermediate
-            case Model.Product.Chemical:
-            case Model.Product.Circuit:
-            case Model.Product.Computer:
-            // case Model.Product.Concrete: // operational
-            case Model.Product.Machine:
-            case Model.Product.Tool:
+            case Product.Fiber: // intermediate
+            case Product.Chemical:
+            case Product.Circuit:
+            case Product.Computer:
+            // case Product.Concrete: // operational
+            case Product.Machine:
+            case Product.Tool:
                 return 1.5;
         }
     }
 
-    public static basePrice(product: Model.Product) {
+    public static basePrice(product: Product) {
         switch (product) {
-            case Model.Product.Crop: // raw materials
-            case Model.Product.Metal:
-            case Model.Product.Gem:
-            case Model.Product.Fuel:
-            case Model.Product.Fiber: // intermediate
-            case Model.Product.Chemical:
-            case Model.Product.Circuit:
-            case Model.Product.Computer:
+            case Product.Crop: // raw materials
+            case Product.Metal:
+            case Product.Gem:
+            case Product.Fuel:
+            case Product.Fiber: // intermediate
+            case Product.Chemical:
+            case Product.Circuit:
+            case Product.Computer:
                 return 1;
-            case Model.Product.Machine: // operational
-            case Model.Product.Tool:
+            case Product.Machine: // operational
+            case Product.Tool:
                 return 2;
-            case Model.Product.Accessory: // luxury
-            case Model.Product.Furniture:
-            case Model.Product.Gadget:
-            case Model.Product.Vehicle:
+            case Product.Accessory: // luxury
+            case Product.Furniture:
+            case Product.Gadget:
+            case Product.Vehicle:
                 return 4;
-            case Model.Product.Food: // basic
-            case Model.Product.Drink:
-            case Model.Product.Apparel:
-            case Model.Product.Medicine:
+            case Product.Food: // basic
+            case Product.Drink:
+            case Product.Apparel:
+            case Product.Medicine:
                 return 1.5;
         }
     }
-    private derivedDemands = new Array<Model.Product>(Model.NUM_PRODUCTS).fill(0);
+    private derivedDemands = new Array<Product>(NUM_PRODUCTS).fill(0);
 
     constructor(
         public readonly id: number,
-        private homePlanet: Model.Planet,
+        private homePlanet: Planet,
         private population: number,
-        private playerInventory: Model.Inventory,
-        private marketInventory: Model.Inventory,
+        private playerInventory: Inventory,
+        private marketInventory: Inventory,
         private maxPopulation = 100,
         private isLockPopulation = false,
         private powerPlanetLevel = 0,
@@ -166,7 +171,7 @@ export class Colony {
         return Math.ceil(this.maxPopulation);
     }
 
-    public growthRate(galaxy: Model.Galaxy) {
+    public growthRate(galaxy: Galaxy) {
         const baseGrowth = 0.1;
 
         if (this.foodHappiness < 1) {
@@ -183,7 +188,7 @@ export class Colony {
         return energyUsage * common * luxury * baseGrowth;
     }
 
-    public getTraderPowerUsage(galaxy: Model.Galaxy) {
+    public getTraderPowerUsage(galaxy: Galaxy) {
         let numTraders = 0;
         const tos = galaxy.getTradeRoutes().get(this);
 
@@ -196,7 +201,7 @@ export class Colony {
         return numTraders;
     }
 
-    public getIndustrialPowerUsage(galaxy: Model.Galaxy) {
+    public getIndustrialPowerUsage(galaxy: Galaxy) {
         const industries = galaxy.getIndustries(this);
         if (industries === undefined) {
             return 0;
@@ -209,7 +214,7 @@ export class Colony {
         return Math.round(this.population * 10);
     }
 
-    public getTotalPowerUsage(galaxy: Model.Galaxy) {
+    public getTotalPowerUsage(galaxy: Galaxy) {
         const industrialUsage = this.getIndustrialPowerUsage(galaxy);
         const traderUsage = this.getTraderPowerUsage(galaxy);
         const civUsage = this.getCivilianPowerUsage();
@@ -217,7 +222,7 @@ export class Colony {
         return { industrialUsage, traderUsage, civUsage, totalUsage };
     }
 
-    public getPowerUsageEff(galaxy: Model.Galaxy) {
+    public getPowerUsageEff(galaxy: Galaxy) {
         const { totalUsage: usage } = this.getTotalPowerUsage(galaxy);
         const output = this.getPowerOutput();
         if (usage === 0) {
@@ -234,10 +239,10 @@ export class Colony {
         return Math.round(this.getMaxPowerPotential() * this.getPowerOutputEff());
     }
 
-    public getEnergyPrice(galaxy: Model.Galaxy) {
+    public getEnergyPrice(galaxy: Galaxy) {
         const { totalUsage: demand } = this.getTotalPowerUsage(galaxy);
         const supply = this.getPowerOutput();
-        return Colony.estimatePrice(demand, supply, 1, Colony.basePrice(Model.Product.Fuel));
+        return Colony.estimatePrice(demand, supply, 1, Colony.basePrice(Product.Fuel));
     }
 
     public getMaxPowerPotential() {
@@ -252,9 +257,9 @@ export class Colony {
         return this.powerPlanetLevel;
     }
 
-    public getCitizenDemand(product: Model.Product) {
+    public getCitizenDemand(product: Product) {
         switch (product) {
-            case Model.Product.Fuel:
+            case Product.Fuel:
                 return this.getFuelDemand();
             default:
                 const unitDemand = COLONY_UNIT_DEMAND[product];
@@ -262,27 +267,27 @@ export class Colony {
         }
     }
 
-    public isProducing(galaxy: Model.Galaxy, product: Model.Product) {
+    public isProducing(galaxy: Galaxy, product: Product) {
         const industries = galaxy.getIndustries(this);
         return industries !== undefined && toIt(industries)
             .some((industry) => industry.productType === product);
     }
 
-    public hasDemand(product: Model.Product) {
+    public hasDemand(product: Product) {
         return this.getDemand(product) > 0;
     }
 
-    public getDemand(product: Model.Product) {
+    public getDemand(product: Product) {
         const base = this.getCitizenDemand(product);
         const derived = this.derivedDemands[product];
         return base + derived;
     }
 
-    public getSupply(product: Model.Product) {
+    public getSupply(product: Product) {
         return this.marketInventory.getQty(product);
     }
 
-    public recalculate(galaxy: Model.Galaxy) {
+    public recalculate(galaxy: Galaxy) {
         this.consume();
         this.growth(galaxy);
 
@@ -296,7 +301,7 @@ export class Colony {
         for (const industry of industries) {
             const prodCap = industry.prodCap(galaxy);
             Immutable
-                .Seq(Model.Industry.getDemandProducts(industry.productType))
+                .Seq(Industry.getDemandProducts(industry.productType))
                 .map((x) => {
                     return {
                         neededKinds: x,
@@ -312,17 +317,17 @@ export class Colony {
         }
     }
 
-    public canExpandPowerPlant(galaxy: Model.Galaxy) {
+    public canExpandPowerPlant(galaxy: Galaxy) {
         const { totalUsage } = this.getTotalPowerUsage(galaxy);
         return 2 * totalUsage > this.getMaxPowerPotential();
     }
 
-    public expandPowerPlanet(galaxy: Model.Galaxy) {
+    public expandPowerPlanet(galaxy: Galaxy) {
         console.assert(this.canExpandPowerPlant(galaxy));
         this.powerPlanetLevel += 1;
     }
 
-    public getProdCap(galaxy: Model.Galaxy, product: Model.Product) {
+    public getProdCap(galaxy: Galaxy, product: Product) {
         const industries = galaxy.getIndustries(this);
         if (industries === undefined) {
             return 0;
@@ -332,11 +337,11 @@ export class Colony {
             .map((industry) => industry.prodCap(galaxy)));
     }
 
-    public trade(galaxy: Model.Galaxy) {
+    public trade(galaxy: Galaxy) {
 
         const playerInventory = this.playerInventory;
 
-        for (const product of Model.allProducts()) {
+        for (const product of allProducts()) {
             const qty = playerInventory.getQty(product);
             const demand = playerInventory.getDemand(galaxy, product);
             if (qty > demand) {
@@ -356,12 +361,12 @@ export class Colony {
         return this.isLockPopulation;
     }
 
-    public getPrice(product: Model.Product) {
+    public getPrice(product: Product) {
         const supply = this.marketInventory.getQty(product);
         return this.realPrice(product, supply);
     }
 
-    public realPrice(product: Model.Product, supply: number) {
+    public realPrice(product: Product, supply: number) {
         const demand = this.getDemand(product); // galaxy.getGalacticDemands(product);
 
         const basePrice = Colony.basePrice(product);
@@ -378,9 +383,9 @@ export class Colony {
     }
 
     public tryBuy(
-        galaxy: Model.Galaxy,
-        fromInventory: Model.Inventory,
-        product: Model.Product,
+        galaxy: Galaxy,
+        fromInventory: Inventory,
+        product: Product,
         maxQty: number,
         minPrice: number,
     ) {
@@ -414,9 +419,9 @@ export class Colony {
     }
 
     public trySell(
-        galaxy: Model.Galaxy,
-        toInventory: Model.Inventory,
-        product: Model.Product,
+        galaxy: Galaxy,
+        toInventory: Inventory,
+        product: Product,
         maxQty: number,
         maxPrice: number,
         isInternalBuyer: boolean = false,
@@ -454,14 +459,14 @@ export class Colony {
         }
     }
 
-    public getDeficit(galaxy: Model.Galaxy, product: Model.Product) {
+    public getDeficit(galaxy: Galaxy, product: Product) {
         const market = this.marketInventory;
         const qty = market.getQty(product);
         const keep = this.minStockQty(galaxy, product);
         return qty < keep ? keep - qty : 0;
     }
 
-    private minStockQty(galaxy: Model.Galaxy, product: Model.Product) {
+    private minStockQty(galaxy: Galaxy, product: Product) {
         const baseDemand = this.getDemand(product);
 
         // if the colony is producing the target goods, then keep only 1 day worth of goods for local consumption
@@ -471,8 +476,8 @@ export class Colony {
         return DAYS_KEEP_GOODS * baseDemand;
     }
 
-    private growth(galaxy: Model.Galaxy) {
-        const rate = this.growthRate(galaxy) / Model.YEAR_PER_TICK;
+    private growth(galaxy: Galaxy) {
+        const rate = this.growthRate(galaxy) / YEAR_PER_TICK;
         const next = Math.max(1, this.population * (1 + rate));
 
         const maxPop = this.isLockPopulation ? this.population : this.getMaxPop();
@@ -489,7 +494,7 @@ export class Colony {
     private consume() {
         const inventory = this.marketInventory;
 
-        const consume1 = (product: Model.Product) => {
+        const consume1 = (product: Product) => {
             const qty = inventory.getQty(product);
             const demand = Math.floor(this.getCitizenDemand(product));
             if (demand === 0) {
@@ -501,33 +506,31 @@ export class Colony {
             return consumed / demand;
         };
 
-        const allConsumption = Model
-            .allProducts()
+        const allConsumption = allProducts()
             .map((product) => consume1(product));
 
         this.commonHappiness = average(
-            allConsumption[Model.Product.Drink],
-            allConsumption[Model.Product.Apparel],
-            allConsumption[Model.Product.Medicine],
+            allConsumption[Product.Drink],
+            allConsumption[Product.Apparel],
+            allConsumption[Product.Medicine],
         );
 
         this.luxuryHappiness = average(
-            allConsumption[Model.Product.Accessory],
-            allConsumption[Model.Product.Furniture],
-            allConsumption[Model.Product.Gadget],
-            allConsumption[Model.Product.Vehicle],
+            allConsumption[Product.Accessory],
+            allConsumption[Product.Furniture],
+            allConsumption[Product.Gadget],
+            allConsumption[Product.Vehicle],
         );
 
-        this.foodHappiness = allConsumption[Model.Product.Food];
+        this.foodHappiness = allConsumption[Product.Food];
 
-        const fEff = allConsumption[Model.Product.Fuel];
+        const fEff = allConsumption[Product.Fuel];
         this.powerOutputEff = fEff * fEff; // fEff squared
     }
 }
 
 // needs to be placed after Colony for webpack'ed bundle to work
-const MIN_PRICE = Model
-    .allProducts()
+const MIN_PRICE = allProducts()
     .map((product) => {
         const basePrice = Colony.basePrice(product);
         const elasticity = Colony.elasticity(product);

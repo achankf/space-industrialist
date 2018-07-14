@@ -148,3 +148,8 @@ function getOpDemand(product: Product): Product {
 
 export const OP_PRODUCTS: Product[] = allProducts()
     .map((x) => getOpDemand(x));
+
+export interface IOpDemand {
+    neededKinds: Set<Product>;
+    qty: number;
+}

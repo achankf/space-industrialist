@@ -1,9 +1,10 @@
 import * as Immutable from "immutable";
 import * as React from "react";
-import * as Model from "../../model";
+import { Fleet } from "../../model/fleet";
+import { Product } from "../../model/product";
 
 interface ICargo {
-    fleet: Model.Fleet;
+    fleet: Fleet;
 }
 
 export default class Cargo extends React.Component<ICargo> {
@@ -15,7 +16,7 @@ export default class Cargo extends React.Component<ICargo> {
             .Seq(fleet.getCargo().getAllQty())
             .filter(([qty]) => qty > 0)
             .map(([product, qty]) => <tr key={product}>
-                <td>{Model.Product[product]}</td>
+                <td>{Product[product]}</td>
                 <td>{qty}</td>
             </tr>);
 

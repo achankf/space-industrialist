@@ -1,7 +1,9 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Game } from "../game";
-import * as Model from "../model";
+import { IMapData, IRouteSegment } from "../model";
+import { Fleet as FleetModel } from "../model/fleet";
+import { Planet as PlanetModel } from "../model/planet";
 import { ClosablePanelType } from "./action/closable_action";
 import Fleet from "./Fleet";
 import ImportExport from "./ImportExport";
@@ -95,22 +97,22 @@ class App extends React.Component<AppProps, IAppState> {
           return <ImportExport game={game} />;
         case ClosablePanelType.Fleet:
           {
-            const fleet = currentViewData.args as Model.Fleet;
+            const fleet = currentViewData.args as FleetModel;
             return <Fleet key={fleet.id} gameWrapper={{ game }} fleet={fleet} />;
           }
         case ClosablePanelType.Planet:
           {
-            const planet = currentViewData.args as Model.Planet;
+            const planet = currentViewData.args as PlanetModel;
             return <Planet key={planet.id} game={game} planet={planet} />;
           }
         case ClosablePanelType.Route:
           {
-            const route = currentViewData.args as Model.IRouteSegment;
+            const route = currentViewData.args as IRouteSegment;
             return <Route key={route.from.toString() + " " + route.to.toString()} game={game} route={route} />;
           }
         case ClosablePanelType.Selector:
           {
-            const objs = currentViewData.args as Model.IMapData[];
+            const objs = currentViewData.args as IMapData[];
             return <Selector game={game} objs={objs} />;
           }
         case ClosablePanelType.Tutorial:

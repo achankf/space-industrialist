@@ -1,13 +1,15 @@
 import * as React from "react";
 import { Game } from "../game";
-import * as Model from "../model";
+import { IRouteSegment } from "../model";
+import { Colony } from "../model/colony";
+import { Planet } from "../model/planet";
 import ContentPanel from "./ContentPanel";
 import TitleBar from "./TitleBar";
 import Window from "./Window";
 
 interface IRouteOwnProps {
     game: Game;
-    route: Model.IRouteSegment;
+    route: IRouteSegment;
 }
 
 function arrow(left: number, right: number) {
@@ -20,8 +22,8 @@ export default class Route extends React.Component<IRouteOwnProps> {
 
     private readonly lowPlanetId: number;
     private readonly highPlanetId: number;
-    private readonly lowColony: Model.Colony;
-    private readonly highColony: Model.Colony;
+    private readonly lowColony: Colony;
+    private readonly highColony: Colony;
 
     constructor(props: IRouteOwnProps) {
         super(props);
@@ -30,10 +32,10 @@ export default class Route extends React.Component<IRouteOwnProps> {
         const route = this.props.route;
         const galaxy = game.getReader();
 
-        const fromObj = galaxy.getPlanet(route.from) as Model.Planet;
+        const fromObj = galaxy.getPlanet(route.from) as Planet;
         console.assert(fromObj !== undefined);
         console.assert(fromObj.isColonized());
-        const toObj = galaxy.getPlanet(route.to) as Model.Planet;
+        const toObj = galaxy.getPlanet(route.to) as Planet;
         console.assert(toObj !== undefined);
         console.assert(toObj.isColonized());
 
@@ -119,11 +121,11 @@ export default class Route extends React.Component<IRouteOwnProps> {
     }
 }
 
-export function routeString(game: Game, route: Model.IRouteSegment) {
+export function routeString(game: Game, route: IRouteSegment) {
     const galaxy = game.getReader();
-    const fromObj = galaxy.getPlanet(route.from) as Model.Planet;
+    const fromObj = galaxy.getPlanet(route.from) as Planet;
     console.assert(fromObj !== undefined);
-    const toObj = galaxy.getPlanet(route.to) as Model.Planet;
+    const toObj = galaxy.getPlanet(route.to) as Planet;
     console.assert(toObj !== undefined);
 
     if (fromObj.id < toObj.id) {

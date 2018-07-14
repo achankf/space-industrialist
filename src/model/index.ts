@@ -1,18 +1,3 @@
-export * from "./product";
-export * from "./colony";
-export * from "./industry";
-export * from "./inventory";
-export * from "./galaxy";
-export * from "./fleet";
-export * from "./planet";
-
-import { Product } from "./product";
-
-export interface IOpDemand {
-    neededKinds: Set<Product>;
-    qty: number;
-}
-
 export enum FleetState {
     Hold,
     Move,

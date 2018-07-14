@@ -1,11 +1,13 @@
 import * as React from "react";
 import { Game } from "../../../game";
-import * as Model from "../../../model";
+import { INDUSTRY_COST, INDUSTRY_DEMOLISH_COST } from "../../../model";
+import { Colony } from "../../../model/colony";
+import { Industry } from "../../../model/industry";
 
 interface IControlButtonsOwnProps {
-    colony: Model.Colony;
+    colony: Colony;
     game: Game;
-    industry: Model.Industry;
+    industry: Industry;
 }
 
 type ControlButtonsProps = IControlButtonsOwnProps;
@@ -30,7 +32,7 @@ export default class ControlButtons extends React.Component<ControlButtonsProps>
 
     private updateIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
 
-        const isOk = e.shiftKey || e.ctrlKey || confirm(`Are you sure? This action costs $${Model.INDUSTRY_COST} reduces operational efficiency. (press ctrl while clicking the button suppresses this message, press shift for 10 times this operation)`);
+        const isOk = e.shiftKey || e.ctrlKey || confirm(`Are you sure? This action costs $${INDUSTRY_COST} reduces operational efficiency. (press ctrl while clicking the button suppresses this message, press shift for 10 times this operation)`);
 
         const industry = this.props.industry;
         const game = this.props.game;
@@ -40,18 +42,18 @@ export default class ControlButtons extends React.Component<ControlButtonsProps>
             if (e.shiftKey) {
                 for (let i = 0; i < 10; i++) {
                     industry.upgrade();
-                    galaxy.withdraw(Model.INDUSTRY_COST);
+                    galaxy.withdraw(INDUSTRY_COST);
                 }
             } else {
                 industry.upgrade();
-                galaxy.withdraw(Model.INDUSTRY_COST);
+                galaxy.withdraw(INDUSTRY_COST);
             }
         }
     }
 
     private downScaleIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
 
-        const isOk = e.shiftKey || e.ctrlKey || confirm(`Are you sure? This action costs $${Model.INDUSTRY_DEMOLISH_COST} reduces operational efficiency. (press ctrl while clicking the button suppresses this message, press shift for 10 times this operation)`);
+        const isOk = e.shiftKey || e.ctrlKey || confirm(`Are you sure? This action costs $${INDUSTRY_DEMOLISH_COST} reduces operational efficiency. (press ctrl while clicking the button suppresses this message, press shift for 10 times this operation)`);
 
         const industry = this.props.industry;
         const game = this.props.game;
@@ -61,11 +63,11 @@ export default class ControlButtons extends React.Component<ControlButtonsProps>
             if (e.shiftKey) {
                 for (let i = 0; i < 10; i++) {
                     industry.downSize();
-                    galaxy.withdraw(Model.INDUSTRY_DEMOLISH_COST);
+                    galaxy.withdraw(INDUSTRY_DEMOLISH_COST);
                 }
             } else {
                 industry.downSize();
-                galaxy.withdraw(Model.INDUSTRY_DEMOLISH_COST);
+                galaxy.withdraw(INDUSTRY_DEMOLISH_COST);
             }
         }
     }
@@ -77,7 +79,7 @@ export default class ControlButtons extends React.Component<ControlButtonsProps>
         const galaxy = game.getWriter();
         const colony = this.props.colony;
         const industryScale = industry.getScale();
-        const demolishCost = industryScale * Model.INDUSTRY_DEMOLISH_COST;
+        const demolishCost = industryScale * INDUSTRY_DEMOLISH_COST;
         const isOk = e.ctrlKey || confirm(`Are you sure? This action costs $${demolishCost} reduces operational efficiency. (press ctrl while clicking the button suppresses this message)`);
         if (isOk) {
             galaxy.shutdownIndustry(colony, industry);

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Game } from "../../../game";
-import * as Model from "../../../model";
+import { Industry } from "../../../model/industry";
 import { Product } from "../../../model/product";
 import { RAW_MATERIALS, SECONDARY_MATERIALS } from "../../productConstants";
 
-export default ({ game, industry }: { game: Game, industry: Model.Industry }) => {
+export default ({ game, industry }: { game: Game, industry: Industry }) => {
 
     const galaxy = game.getReader();
     const industryScale = industry.getScale();

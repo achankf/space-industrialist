@@ -1,13 +1,13 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Game } from "../../../game";
-import * as Model from "../../../model";
+import { Fleet } from "../../../model/fleet";
 import { close } from "../../action/closable_action";
 import DestinationTable from "./DestinationTable";
 
 interface IRouteProps {
     gameWrapper: { game: Game };
-    fleet: Model.Fleet;
+    fleet: Fleet;
 }
 
 interface IRouteDispatchProps {
