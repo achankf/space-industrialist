@@ -1,7 +1,8 @@
 import * as Immutable from "immutable";
-import { add, combine, compare, defaultZero, distance, FloydWarshall, IntersectionKind, kruskalMST, norm, subtract, testLineSegmentCircleIntersect, Trie, uniq } from "myalgo-ts";
+import { add, combine, compare, defaultZero, distance, FloydWarshall, IntersectionKind, kruskalMST, norm, SortedTrie, subtract, testLineSegmentCircleIntersect, Trie, uniq } from "myalgo-ts";
 import * as Model from ".";
 import { CoorT, ILocatable, IRouteSegment, MapDataKind } from ".";
+import { Colony } from "./colony";
 import { allProducts } from "./product";
 
 const BIG_TURN = 50;
@@ -31,6 +32,9 @@ function toMap<T extends Model.IEntity>(it: Iterable<T>) {
         .Seq(it)
         .map((v) => [v.id, v] as [number, T]));
 }
+
+/** Use this comparator for SortedTrie */
+export const colonyCmp = (a: Colony, b: Colony) => a.id - b.id;
 
 export class Galaxy {
 
@@ -114,12 +118,12 @@ export class Galaxy {
     private readonly galacticDemands = new Map<Model.Product, number>();
     private readonly galacticSupplies = new Map<Model.Product, number>();
     private readonly galacticProdCap = new Map<Model.Product, number>();
-    private downstreamConsumers = new Trie<[Model.Colony, Model.Colony], Map<Model.Product, Model.Colony[]>>();
+    private downstreamConsumers = new SortedTrie<Model.Colony, [Model.Colony, Model.Colony], Map<Model.Product, Model.Colony[]>>(colonyCmp);
     private readonly consumers = Model
         .allProducts()
         .map(() => new Set<Model.Colony>());
     private tradeRoutePaths!: FloydWarshall<Model.Colony>;
-    private fleetFuelEff = new Trie<[Model.Colony, Model.Colony], number>();
+    private fleetFuelEff = new SortedTrie<Model.Colony, [Model.Colony, Model.Colony], number>(colonyCmp);
 
     //// game entities & relationships
 
@@ -127,7 +131,7 @@ export class Galaxy {
     private readonly colonies: Model.Colony[] = [];
     private readonly locatableCoors = new Map<ILocatable, CoorT>();
     private readonly colonyIndustries = new Map<Model.Colony, Set<Model.Industry>>();
-    private readonly tradeFleets = new Trie<[Model.Colony, Model.Colony], Set<Model.Fleet>>();
+    private readonly tradeFleets = new SortedTrie<Model.Colony, [Model.Colony, Model.Colony], Set<Model.Fleet>>(colonyCmp);
 
     // internal variables
     private genId = -1;
@@ -583,7 +587,7 @@ export class Galaxy {
         this.tradeRoutePaths = new FloydWarshall(this.tradeRoutes,
             (a: Model.Colony, b: Model.Colony) => colonyDist(a, b));
 
-        this.downstreamConsumers = new Trie();
+        this.downstreamConsumers = this.downstreamConsumers.makeEmpty();
     }
 
     private addObj(obj: ILocatable, coor: CoorT) {
@@ -641,7 +645,7 @@ export class Galaxy {
     }
 
     private * searchTradeRoutes(at: CoorT, radius: number) {
-        const visited = new Trie<[Model.Colony, Model.Colony], true>();
+        const visited = new SortedTrie<Model.Colony, [Model.Colony, Model.Colony], true>(colonyCmp);
         for (const [a, bs] of this.getTradeRoutes()) {
             const coorA = this.getCoor(a.getHomePlanet());
             for (const b of bs) {
@@ -671,7 +675,7 @@ export class Galaxy {
     }
 
     private calRouteFuelEff() {
-        this.fleetFuelEff = new Trie();
+        this.fleetFuelEff = this.fleetFuelEff.makeEmpty();
         for (const [from, tos] of this.tradeRoutes) {
             for (const to of tos) {
                 this.fleetFuelEff.getOrSet([from, to], () => {
@@ -723,10 +727,12 @@ export class Galaxy {
         const colony = industry.colony;
 
         {
-            const industries = this.colonyIndustries.get(colony);
+            let industries = this.colonyIndustries.get(colony);
             if (industries === undefined) {
-                this.colonyIndustries.set(colony, new Set());
+                industries = new Set();
+                this.colonyIndustries.set(colony, industries);
             }
+            industries.add(industry);
         }
 
         colony
@@ -739,7 +745,7 @@ export class Galaxy {
         }
 
         // clear cache, so that fleets will recalculate the downstream demands
-        this.downstreamConsumers = new Trie();
+        this.downstreamConsumers = this.downstreamConsumers.makeEmpty();
     }
 
     private addTradeFleetHelper(fleet: Model.Fleet) {

@@ -2,9 +2,10 @@ import * as Hammer from "hammerjs";
 import * as Immutable from "immutable";
 import * as React from "react";
 import { connect } from "react-redux";
-import { add, norm, project, subtract, Trie } from "../../node_modules/myalgo-ts";
+import { add, norm, project, SortedTrie, subtract } from "../../node_modules/myalgo-ts";
 import { Game } from "../game";
 import * as Model from "../model";
+import { colonyCmp } from "../model";
 import { addClosable, ClosablePanelType } from "./action/closable_action";
 import { IStoreProps } from "./reducer";
 
@@ -255,7 +256,7 @@ class Map extends React.PureComponent<MapProps> {
         ctx.lineWidth = 1;
         ctx.strokeStyle = "cyan";
 
-        const drawn = new Trie<[Model.Colony, Model.Colony], true>();
+        const drawn = new SortedTrie<Model.Colony, [Model.Colony, Model.Colony], true>(colonyCmp);
 
         for (const [u, vs] of tradeRoutes) {
             for (const v of vs) {
