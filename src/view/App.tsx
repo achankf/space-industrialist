@@ -96,17 +96,17 @@ class App extends React.Component<AppProps, IAppState> {
         case ClosablePanelType.Fleet:
           {
             const fleet = currentViewData.args as Model.Fleet;
-            return <Fleet gameWrapper={{ game }} fleet={fleet} />;
+            return <Fleet key={fleet.id} gameWrapper={{ game }} fleet={fleet} />;
           }
         case ClosablePanelType.Planet:
           {
             const planet = currentViewData.args as Model.Planet;
-            return <Planet game={game} planet={planet} />;
+            return <Planet key={planet.id} game={game} planet={planet} />;
           }
         case ClosablePanelType.Route:
           {
             const route = currentViewData.args as Model.IRouteSegment;
-            return <Route game={game} route={route} />;
+            return <Route key={route.from.toString() + " " + route.to.toString()} game={game} route={route} />;
           }
         case ClosablePanelType.Selector:
           {
