@@ -1,5 +1,5 @@
 import * as Immutable from "immutable";
-import { sum } from "../../node_modules/myalgo-ts";
+import { sum } from "myalgo-ts";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
 import { NUM_PRODUCTS, Product } from "./product";

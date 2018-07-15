@@ -1,9 +1,9 @@
 import * as Hammer from "hammerjs";
 import * as Immutable from "immutable";
+import { add, norm, project, SortedTrie, subtract } from "myalgo-ts";
 import * as React from "react";
 import { connect } from "react-redux";
-import { add, norm, project, SortedTrie, subtract } from "../../node_modules/myalgo-ts";
-import { Dispatch } from "../../node_modules/redux";
+import { Dispatch } from "redux";
 import { Game } from "../game";
 import { CoorT, IMapData, IRouteSegment, MapDataKind } from "../model";
 import { Colony } from "../model/colony";

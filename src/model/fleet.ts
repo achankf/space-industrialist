@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
+import { equal, subtract, sum } from "myalgo-ts";
 import { FleetState, ILocatable, MapDataKind } from ".";
-import { equal, subtract, sum } from "../../node_modules/myalgo-ts";
 import { Colony } from "./colony";
 import { Galaxy } from "./galaxy";
 import { Inventory } from "./inventory";

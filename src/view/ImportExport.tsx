@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Dispatch } from "../../node_modules/redux";
+import { Dispatch } from "redux";
 import { Game, ISaveData } from "../game";
 import { addClosable, ClosableAction, ClosablePanelType } from "./action/closable_action";
 import TitleBar from "./TitleBar";

@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
+import { average, sum, toIt } from "myalgo-ts";
 import { YEAR_PER_TICK } from ".";
-import { average, sum, toIt } from "../../node_modules/myalgo-ts";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
 import { Inventory } from "./inventory";

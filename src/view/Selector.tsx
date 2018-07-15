@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Dispatch } from "../../node_modules/redux";
+import { Dispatch } from "redux";
 import { Game } from "../game";
 import { IMapData, IRouteSegment, MapDataKind } from "../model";
 import { Fleet as FleetModel } from "../model/fleet";

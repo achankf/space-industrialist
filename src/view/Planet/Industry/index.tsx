@@ -1,6 +1,6 @@
 import * as Immutable from "immutable";
+import { toIt } from "myalgo-ts";
 import * as React from "react";
-import { toIt } from "../../../../node_modules/myalgo-ts";
 import { Game } from "../../../game";
 import { Colony } from "../../../model/colony";
 import { Industry as IndustryModel } from "../../../model/industry";
