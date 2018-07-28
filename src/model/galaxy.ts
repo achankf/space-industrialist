@@ -204,7 +204,7 @@ export class Galaxy {
             const coors = new Trie<CoorT, true>();
 
             // naive algorithm - repeatedly throw rocks and reject throws that are too close to existing rocks
-            TRY_NEXT_COOR: while (coors.size() < num) {
+            TRY_NEXT_COOR: while (coors.size < num) {
                 const candidate = this.randomCoor(bound);
                 for (const coor of coors.keys()) {
                     if (distance(candidate, coor) < minDist) {
