@@ -1,31 +1,31 @@
 export enum FleetState {
-    Hold,
-    Move,
-    Docked,
+  Hold,
+  Move,
+  Docked,
 }
 
 export enum MapDataKind {
-    Planet,
-    Fleet,
-    RouteSegment,
+  Planet,
+  Fleet,
+  RouteSegment,
 }
 
 export interface IMapData {
-    readonly kind: MapDataKind;
+  readonly kind: MapDataKind;
 }
 
 export interface IEntity {
-    readonly id: number;
+  readonly id: number;
 }
 
 export interface ILocatable extends IEntity {
-    readonly kind: MapDataKind.Planet | MapDataKind.Fleet;
+  readonly kind: MapDataKind.Planet | MapDataKind.Fleet;
 }
 
 export interface IRouteSegment {
-    readonly kind: MapDataKind.RouteSegment;
-    readonly from: CoorT;
-    readonly to: CoorT;
+  readonly kind: MapDataKind.RouteSegment;
+  readonly from: CoorT;
+  readonly to: CoorT;
 }
 
 export type CoorT = [number, number];
@@ -37,12 +37,13 @@ export const INDUSTRY_COST = 10000;
 export const INDUSTRY_DEMOLISH_COST = INDUSTRY_COST / 10;
 export const POWER_PLANT_COST = 1000000;
 
-const MAP_DATA_KEYS = Object
-    .keys(MapDataKind)
-    .filter((k) => typeof MapDataKind[k as any] === "number");
-const MAP_DATA_VALUES = MAP_DATA_KEYS
-    .map((k) => Number(MapDataKind[k as any]) as MapDataKind);
+const MAP_DATA_KEYS = Object.keys(MapDataKind).filter(
+  (k) => typeof MapDataKind[k as keyof typeof MapDataKind] === "number"
+);
+const MAP_DATA_VALUES = MAP_DATA_KEYS.map(
+  (k) => Number(MapDataKind[k as keyof typeof MapDataKind]) as MapDataKind
+);
 
-export function allMapDataKind() {
-    return MAP_DATA_VALUES;
+export function allMapDataKind(): MapDataKind[] {
+  return MAP_DATA_VALUES;
 }

@@ -1,6 +1,5 @@
-*.d.ts
-*.js
-*.map
-.*
+.eslintcache
 build/
+dist
 node_modules/
+yarn-error.log

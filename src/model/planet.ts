@@ -1,38 +1,46 @@
-import { ILocatable, MapDataKind } from ".";
 import { Colony } from "./colony";
 import { RawMaterial } from "./product";
+import { ILocatable, MapDataKind } from ".";
 
 export interface IPlanet {
-    id: number;
-    resource: RawMaterial;
+  id: number;
+  resource: RawMaterial;
 }
 
 export class Planet implements ILocatable {
+  public readonly kind = MapDataKind.Planet;
 
-    public readonly kind = MapDataKind.Planet;
+  constructor(
+    public readonly id: number,
+    public readonly resource: RawMaterial,
+    private colony?: Colony
+  ) {}
 
-    constructor(
-        public readonly id: number,
-        public readonly resource: RawMaterial,
-        private colony?: Colony,
-    ) { }
+  public serialize(): IPlanet {
+    return {
+      id: this.id,
+      resource: this.resource,
+    };
+  }
 
-    public serialize(): IPlanet {
-        return {
-            id: this.id,
-            resource: this.resource,
-        };
+  public colonized(colony: Colony): void {
+    this.colony = colony;
+  }
+
+  public tryGetColony(): Colony | undefined {
+    return this.colony;
+  }
+
+  public getColony(): Colony {
+    if (!this.colony) {
+      throw new Error(
+        "bug: this method should be called for colonized planets"
+      );
     }
+    return this.colony;
+  }
 
-    public colonized(colony: Colony) {
-        this.colony = colony;
-    }
-
-    public getColony() {
-        return this.colony;
-    }
-
-    public isColonized() {
-        return this.colony !== undefined;
-    }
+  public isColonized(): boolean {
+    return this.colony !== undefined;
+  }
 }

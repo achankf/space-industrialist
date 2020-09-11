@@ -8,57 +8,56 @@ import Cargo from "./Cargo";
 import Route from "./Route";
 
 interface IFleetProps {
-    gameWrapper: { game: Game };
-    fleet: FleetModel;
+  gameWrapper: { game: Game };
+  fleet: FleetModel;
 }
 
 enum CurrentView {
-    Cargo,
-    Route,
+  Cargo,
+  Route,
 }
 
 interface IFleetState {
-    currentView: CurrentView;
+  currentView: CurrentView;
 }
 
 export default class Fleet extends React.Component<IFleetProps, IFleetState> {
+  public state = { currentView: CurrentView.Route };
 
-    public state = { currentView: CurrentView.Route };
+  public render(): JSX.Element {
+    const fleet = this.props.fleet;
 
-    public render() {
+    return (
+      <Window>
+        <TitleBar title={`Trader ${fleet.id}`} />
+        <ContentPanel>
+          <nav className="tabs">
+            <div onClick={this.switchRoutePanel}>Route</div>
+            <div onClick={this.switchCargoPanel}>Cargo</div>
+          </nav>
+          {this.getCurrentView()}
+        </ContentPanel>
+      </Window>
+    );
+  }
 
-        const fleet = this.props.fleet;
+  private getCurrentView() {
+    const game = this.props.gameWrapper;
+    const fleet = this.props.fleet;
 
-        return <Window>
-            <TitleBar title={`Trader ${fleet.id}`} />
-            <ContentPanel>
-                <nav className="tabs">
-                    <div onClick={this.switchRoutePanel}>Route</div>
-                    <div onClick={this.switchCargoPanel}>Cargo</div>
-                </nav>
-                {this.getCurrentView()}
-            </ContentPanel>
-        </Window>;
+    switch (this.state.currentView) {
+      case CurrentView.Route:
+        return <Route gameWrapper={game} fleet={fleet} />;
+      case CurrentView.Cargo:
+        return <Cargo fleet={fleet} />;
     }
+  }
 
-    private getCurrentView() {
+  private switchRoutePanel = () => {
+    this.setState({ currentView: CurrentView.Route });
+  };
 
-        const game = this.props.gameWrapper;
-        const fleet = this.props.fleet;
-
-        switch (this.state.currentView) {
-            case CurrentView.Route:
-                return <Route gameWrapper={game} fleet={fleet} />;
-            case CurrentView.Cargo:
-                return <Cargo fleet={fleet} />;
-        }
-    }
-
-    private switchRoutePanel = () => {
-        this.setState({ currentView: CurrentView.Route });
-    }
-
-    private switchCargoPanel = () => {
-        this.setState({ currentView: CurrentView.Cargo });
-    }
+  private switchCargoPanel = () => {
+    this.setState({ currentView: CurrentView.Cargo });
+  };
 }

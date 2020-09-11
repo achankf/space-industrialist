@@ -34,9 +34,6 @@ interface IAppDataProps {
 type AppProps = IAppProps & IAppDataProps;
 
 class App extends React.Component<AppProps, IAppState> {
-
-  private gameLoopId?: number;
-
   constructor(props: AppProps) {
     super(props);
     this.state = { game: props.game };
@@ -55,11 +52,6 @@ class App extends React.Component<AppProps, IAppState> {
   }
 
   private setupGameLoop() {
-
-    if (this.gameLoopId !== undefined) {
-      window.clearInterval(this.gameLoopId);
-    }
-
     let prevPeriod = this.props.updatePeriod;
     let gameLoopId: number;
 
@@ -77,14 +69,15 @@ class App extends React.Component<AppProps, IAppState> {
 
       // update the looping period if changed
       if (this.props.updatePeriod !== prevPeriod) {
+        console.log("HIHI");
         window.clearInterval(gameLoopId);
         prevPeriod = this.props.updatePeriod;
-        gameLoopId = window.setInterval(loop, prevPeriod);
       }
+      window.setTimeout(loop, prevPeriod);
     };
 
     // start the loop
-    gameLoopId = window.setInterval(loop, prevPeriod);
+    loop();
   }
 
   private getCurrentView() {
@@ -95,26 +88,28 @@ class App extends React.Component<AppProps, IAppState> {
       switch (currentViewData.panelType) {
         case ClosablePanelType.ImportExport:
           return <ImportExport game={game} />;
-        case ClosablePanelType.Fleet:
-          {
-            const fleet = currentViewData.args as FleetModel;
-            return <Fleet key={fleet.id} gameWrapper={{ game }} fleet={fleet} />;
-          }
-        case ClosablePanelType.Planet:
-          {
-            const planet = currentViewData.args as PlanetModel;
-            return <Planet key={planet.id} game={game} planet={planet} />;
-          }
-        case ClosablePanelType.Route:
-          {
-            const route = currentViewData.args as IRouteSegment;
-            return <Route key={route.from.toString() + " " + route.to.toString()} game={game} route={route} />;
-          }
-        case ClosablePanelType.Selector:
-          {
-            const objs = currentViewData.args as IMapData[];
-            return <Selector game={game} objs={objs} />;
-          }
+        case ClosablePanelType.Fleet: {
+          const fleet = currentViewData.args as FleetModel;
+          return <Fleet key={fleet.id} gameWrapper={{ game }} fleet={fleet} />;
+        }
+        case ClosablePanelType.Planet: {
+          const planet = currentViewData.args as PlanetModel;
+          return <Planet key={planet.id} game={game} planet={planet} />;
+        }
+        case ClosablePanelType.Route: {
+          const route = currentViewData.args as IRouteSegment;
+          return (
+            <Route
+              key={route.from.toString() + " " + route.to.toString()}
+              game={game}
+              route={route}
+            />
+          );
+        }
+        case ClosablePanelType.Selector: {
+          const objs = currentViewData.args as IMapData[];
+          return <Selector game={game} objs={objs} />;
+        }
         case ClosablePanelType.Tutorial:
           return <Tutorial />;
         default:
