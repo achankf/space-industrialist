@@ -1,6 +1,7 @@
-import * as React from "react";
+import React, { useContext } from "react";
 import * as Immutable from "immutable";
 import { toIt } from "myalgo-ts";
+import { GameContext } from "../../../contexts/GameContext";
 import getOrThrow from "../../../utils/getOrThrow";
 import {
   DEMAND_PRODUCTS,
@@ -12,7 +13,6 @@ import {
   allProducts,
 } from "../../../model/product";
 import { Colony } from "../../../model/colony";
-import { Game } from "../../../game";
 import { Industry as IndustryModel } from "../../../model/industry";
 import BuildButton from "./BuildButton";
 import ControlButtons from "./ControlButtons";
@@ -53,70 +53,62 @@ const POTENTIAL_PRODUCTS = Immutable.Map(
   })
 );
 
-interface IIndustryOwnProps {
-  gameWrapper: { game: Game };
+interface IndustryProps {
   colony: Colony;
 }
 
-type IndustryProps = IIndustryOwnProps;
+const Industry: React.FC<IndustryProps> = ({ colony }) => {
+  const { game } = useContext(GameContext);
+  const galaxy = game.getReader();
+  const industries = galaxy.getIndustries(colony) || new Set<IndustryModel>();
 
-export default class Industry extends React.Component<IndustryProps> {
-  public render(): JSX.Element {
-    const game = this.props.gameWrapper.game;
-    const colony = this.props.colony;
-    const galaxy = game.getReader();
-    const industries = galaxy.getIndustries(colony) || new Set<IndustryModel>();
+  const productsInProd = Immutable.Seq(industries)
+    .map((industry) => industry.productType)
+    .toSet();
 
-    const productsInProd = Immutable.Seq(industries)
-      .map((industry) => industry.productType)
-      .toSet();
+  const localResource = colony.getHomePlanet().resource;
 
-    const localResource = colony.getHomePlanet().resource;
-
-    // products that will be shown in the industry screen
-    const showProducts =
-      industries.size === 2
-        ? productsInProd
-        : getOrThrow(
-            POTENTIAL_PRODUCTS,
-            localResource,
-            "bug: resource not found in potential products"
-          );
-
-    const rows = showProducts
-      .sortBy((product) => Product[product])
-      .map((product) => {
-        const industry = toIt(industries)
-          .filter((x) => x.productType === product)
-          .inject();
-
-        return (
-          <tr key={product}>
-            <td title={PRODUCT_HOVER_TEXT.get(product)}>
-              {Product[product]}
-              {industry !== undefined ? (
-                <ControlButtons
-                  colony={colony}
-                  game={game}
-                  industry={industry}
-                />
-              ) : undefined}
-            </td>
-            <td>
-              {industry !== undefined ? (
-                <IndustryDetails game={game} industry={industry} />
-              ) : (
-                <BuildButton colony={colony} game={game} product={product} />
-              )}
-            </td>
-          </tr>
+  // products that will be shown in the industry screen
+  const showProducts =
+    industries.size === 2
+      ? productsInProd
+      : getOrThrow(
+          POTENTIAL_PRODUCTS,
+          localResource,
+          "bug: resource not found in potential products"
         );
-      });
 
-    return (
-      <table>
-        <tbody>{rows}</tbody>
-      </table>
-    );
-  }
-}
+  const rows = showProducts
+    .sortBy((product) => Product[product])
+    .map((product) => {
+      const industry = toIt(industries)
+        .filter((x) => x.productType === product)
+        .inject();
+
+      return (
+        <tr key={product}>
+          <td title={PRODUCT_HOVER_TEXT.get(product)}>
+            {Product[product]}
+            {industry !== undefined ? (
+              <ControlButtons colony={colony} industry={industry} />
+            ) : undefined}
+          </td>
+          <td>
+            {industry !== undefined ? (
+              <IndustryDetails industry={industry} />
+            ) : (
+              <BuildButton colony={colony} product={product} />
+            )}
+          </td>
+        </tr>
+      );
+    });
+
+  return (
+    <table>
+      <tbody>{rows}</tbody>
+    </table>
+  );
+};
+
+export default Industry;

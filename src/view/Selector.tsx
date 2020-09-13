@@ -1,105 +1,92 @@
-import * as React from "react";
-import { connect } from "react-redux";
-import { Dispatch } from "redux";
-import { Game } from "../game";
+import React, { useContext } from "react";
+import assert from "../utils/assert";
+import { GameContext } from "../contexts/GameContext";
 import { IMapData, IRouteSegment, MapDataKind } from "../model";
 import { Fleet as FleetModel } from "../model/fleet";
 import { Planet as PlanetModel } from "../model/planet";
-import {
-  addClosable,
-  ClosableAction,
-  ClosableArgs,
-  ClosablePanelType,
-} from "./action/closable_action";
-import ContentPanel from "./ContentPanel";
+import Window from "../components/Window";
+import ContentPanel from "../components/ContentPanel";
+import TitleBar from "../components/TitleBar";
+import { ViewContext } from "../contexts/ViewContext";
+import Bug from "../utils/UnreachableError";
+import { BaseViewProps, ViewKind } from "./constants/view";
 import { routeString } from "./Route";
-import TitleBar from "./TitleBar";
-import Window from "./Window";
 
-interface ISelectorProps {
-  game: Game;
+export interface BaseSelectorProps {
   objs: IMapData[];
 }
 
-interface ISelectorDispatchProps {
-  addClosable: (type: ClosablePanelType, args: ClosableArgs) => void;
-}
+type SelectorProps = BaseSelectorProps & BaseViewProps;
 
-type SelectorProps = ISelectorProps & ISelectorDispatchProps;
+const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
+  assert(objs.length > 0);
 
-class Selector extends React.PureComponent<SelectorProps> {
-  public readonly view = document.createElement("div");
+  const { game } = useContext(GameContext);
+  const { setCurrentView } = useContext(ViewContext);
 
-  constructor(props: SelectorProps) {
-    super(props);
-    console.assert(props.objs.length > 0);
-  }
+  const allLabels = objs.map((obj) => {
+    let uiData: { label: string; color: string; click: () => void };
 
-  public render() {
-    const game = this.props.game;
-    const allLabels = this.props.objs.map((obj) => {
-      let label: string;
-      let color: string;
-      let click: () => void;
+    switch (obj.kind) {
+      case MapDataKind.Fleet:
+        {
+          const fleet = obj as FleetModel;
+          uiData = {
+            label: `Trader ${fleet.id}`,
+            color: "yellow",
+            click() {
+              setCurrentView({ kind: ViewKind.Fleet, fleet });
+            },
+          };
+        }
+        break;
+      case MapDataKind.Planet:
+        {
+          const planet = obj as PlanetModel;
+          uiData = {
+            label: `Planet ${planet.id}`,
+            color: "green",
+            click() {
+              setCurrentView({ kind: ViewKind.Planet, planet });
+            },
+          };
+        }
+        break;
+      case MapDataKind.RouteSegment:
+        {
+          const route = obj as IRouteSegment;
+          uiData = {
+            label: `${routeString(game, route)}`,
+            color: "darkcyan",
+            click() {
+              setCurrentView({ kind: ViewKind.Route, route });
+            },
+          };
+        }
+        break;
+      default:
+        throw new Bug();
+    }
 
-      switch (obj.kind) {
-        case MapDataKind.Fleet:
-          {
-            const fleet = obj as FleetModel;
-            label = `Trader ${fleet.id}`;
-            color = "yellow";
-            click = () =>
-              this.props.addClosable(ClosablePanelType.Fleet, fleet);
-          }
-          break;
-        case MapDataKind.Planet:
-          {
-            const planet = obj as PlanetModel;
-            label = `Planet ${planet.id}`;
-            color = "green";
-            click = () =>
-              this.props.addClosable(ClosablePanelType.Planet, planet);
-          }
-          break;
-        case MapDataKind.RouteSegment:
-          {
-            const route = obj as IRouteSegment;
-            label = `${routeString(game, route)}`;
-            color = "darkcyan";
-            click = () =>
-              this.props.addClosable(ClosablePanelType.Route, route);
-          }
-          break;
-        default:
-          throw new Error("unhandled");
-      }
-
-      return (
-        <div
-          className="selectLabel"
-          key={label}
-          style={{ color }}
-          onClick={click}
-        >
-          {label}
-        </div>
-      );
-    });
-
+    const { label, color, click } = uiData;
     return (
-      <Window>
-        <TitleBar title="Which One?" />
-        <ContentPanel>{allLabels}</ContentPanel>
-      </Window>
+      <div
+        className="selectLabel"
+        key={label}
+        style={{ color }}
+        onClick={click}
+      >
+        {label}
+      </div>
     );
-  }
-}
+  });
 
-const dispatchers = (
-  dispatch: Dispatch<ClosableAction>
-): ISelectorDispatchProps => ({
-  addClosable: (type: ClosablePanelType, args: ClosableArgs) =>
-    dispatch(addClosable(type, args)),
-});
+  return (
+    <Window>
+      <TitleBar viewId={viewId} title="Which One?" />
+      <ContentPanel>{allLabels}</ContentPanel>
+    </Window>
+  );
+};
 
-export default connect(null, dispatchers)(Selector);
+export default Selector;

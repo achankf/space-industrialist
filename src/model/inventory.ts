@@ -1,5 +1,6 @@
 import * as Immutable from "immutable";
 import { sum } from "myalgo-ts";
+import assert from "../utils/assert";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
 import { NUM_PRODUCTS, Product } from "./product";
@@ -20,7 +21,7 @@ export class Inventory {
     private maxStorage = Infinity,
     private inventory = new Array<number>(NUM_PRODUCTS).fill(0)
   ) {
-    console.assert(this.usedSpace <= maxStorage);
+    assert(this.usedSpace <= maxStorage);
   }
 
   public serialize(): IInventory {
@@ -33,7 +34,7 @@ export class Inventory {
 
   public getEmptySpace(): number {
     const space = this.maxStorage - this.usedSpace;
-    console.assert(space >= 0);
+    assert(space >= 0);
     return space;
   }
 
@@ -43,13 +44,13 @@ export class Inventory {
 
   public getQty(productType: Product): number {
     const qty = this.inventory[productType];
-    console.assert(qty >= 0);
+    assert(qty >= 0);
     return qty;
   }
 
   public putGoods(productType: Product, qty: number): number {
-    console.assert(qty >= 0);
-    console.assert(Number.isInteger(qty));
+    assert(qty >= 0);
+    assert(Number.isInteger(qty));
     const inStock = this.inventory[productType];
     const newQty = Math.min(this.maxStorage - this.usedSpace, qty);
     const newTotal = inStock + newQty;
@@ -59,8 +60,8 @@ export class Inventory {
   }
 
   public takeGoods(productType: Product, qty: number): number {
-    console.assert(qty >= 0);
-    console.assert(Number.isInteger(qty));
+    assert(qty >= 0);
+    assert(Number.isInteger(qty));
 
     const remain = this.inventory[productType] - qty;
     if (remain < 0) {
@@ -75,7 +76,7 @@ export class Inventory {
   }
 
   public hasSpaceFor(qty: number): boolean {
-    console.assert(qty >= 0);
+    assert(qty >= 0);
     return this.maxStorage >= this.usedSpace + qty;
   }
 
@@ -115,7 +116,7 @@ export class Inventory {
             demands[kind] += qty;
           }
         }
-        console.assert(need >= 0);
+        assert(need >= 0);
         // fill remaining needs with the target product
         demands[product] += need;
       }
@@ -130,7 +131,7 @@ export class Inventory {
     );
     for (const pair of it) {
       // any entry must have qty >= 0
-      console.assert(pair[1] >= 0);
+      assert(pair[1] >= 0);
       yield pair;
     }
   }
@@ -139,7 +140,7 @@ export class Inventory {
     products: Set<Product> | Immutable.Set<Product>,
     qty: number
   ): number {
-    console.assert(qty >= 0);
+    assert(qty >= 0);
 
     const sorted = Array.from(products)
       // sort by descending order

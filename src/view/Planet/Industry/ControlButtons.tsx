@@ -1,56 +1,28 @@
-import * as React from "react";
-import { Game } from "../../../game";
+import React, { useContext } from "react";
+import { GameContext } from "../../../contexts/GameContext";
 import { INDUSTRY_COST, INDUSTRY_DEMOLISH_COST } from "../../../model";
 import { Colony } from "../../../model/colony";
 import { Industry } from "../../../model/industry";
 
-interface IControlButtonsOwnProps {
+interface ControlButtonsProps {
   colony: Colony;
-  game: Game;
   industry: Industry;
 }
 
-type ControlButtonsProps = IControlButtonsOwnProps;
+const ControlButtons: React.FC<ControlButtonsProps> = ({
+  colony,
+  industry,
+}) => {
+  const { game } = useContext(GameContext);
+  const galaxy = game.getWriter();
 
-export default class ControlButtons extends React.Component<
-  ControlButtonsProps
-> {
-  public render(): JSX.Element {
-    return (
-      <div>
-        <button
-          onClick={this.updateIndustry}
-          title="expand industry (increase scale by 1)"
-        >
-          +
-        </button>
-        <button
-          onClick={this.downScaleIndustry}
-          title="down size (decrease scale by 1)"
-        >
-          -
-        </button>
-        <button
-          onClick={this.demolishIndustry}
-          title="shut down (free up the industry slot)"
-        >
-          X
-        </button>
-      </div>
-    );
-  }
-
-  private updateIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
+  function updateIndustry(e: React.MouseEvent<HTMLButtonElement>) {
     const isOk =
       e.shiftKey ||
       e.ctrlKey ||
       confirm(
         `Are you sure? This action costs $${INDUSTRY_COST} reduces operational efficiency. (press ctrl while clicking the button suppresses this message, press shift for 10 times this operation)`
       );
-
-    const industry = this.props.industry;
-    const game = this.props.game;
-    const galaxy = game.getWriter();
 
     if (isOk) {
       if (e.shiftKey) {
@@ -63,19 +35,15 @@ export default class ControlButtons extends React.Component<
         galaxy.withdraw(INDUSTRY_COST);
       }
     }
-  };
+  }
 
-  private downScaleIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
+  function downScaleIndustry(e: React.MouseEvent<HTMLButtonElement>) {
     const isOk =
       e.shiftKey ||
       e.ctrlKey ||
-      confirm(
+      window.confirm(
         `Are you sure? This action costs $${INDUSTRY_DEMOLISH_COST} reduces operational efficiency. (press ctrl while clicking the button suppresses this message, press shift for 10 times this operation)`
       );
-
-    const industry = this.props.industry;
-    const game = this.props.game;
-    const galaxy = game.getWriter();
 
     if (isOk) {
       if (e.shiftKey) {
@@ -88,23 +56,44 @@ export default class ControlButtons extends React.Component<
         galaxy.withdraw(INDUSTRY_DEMOLISH_COST);
       }
     }
-  };
+  }
 
-  private demolishIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const industry = this.props.industry;
-    const game = this.props.game;
-    const galaxy = game.getWriter();
-    const colony = this.props.colony;
+  function demolishIndustry(e: React.MouseEvent<HTMLButtonElement>) {
     const industryScale = industry.getScale();
     const demolishCost = industryScale * INDUSTRY_DEMOLISH_COST;
     const isOk =
       e.ctrlKey ||
-      confirm(
+      window.confirm(
         `Are you sure? This action costs $${demolishCost} reduces operational efficiency. (press ctrl while clicking the button suppresses this message)`
       );
     if (isOk) {
       galaxy.shutdownIndustry(colony, industry);
       galaxy.withdraw(demolishCost);
     }
-  };
-}
+  }
+
+  return (
+    <div>
+      <button
+        onClick={updateIndustry}
+        title="expand industry (increase scale by 1)"
+      >
+        +
+      </button>
+      <button
+        onClick={downScaleIndustry}
+        title="down size (decrease scale by 1)"
+      >
+        -
+      </button>
+      <button
+        onClick={demolishIndustry}
+        title="shut down (free up the industry slot)"
+      >
+        X
+      </button>
+    </div>
+  );
+};
+
+export default ControlButtons;

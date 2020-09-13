@@ -1,89 +1,39 @@
-import * as React from "react";
+import React, { useState } from "react";
 import { Planet } from "../../model/planet";
-import ContentPanel from "../ContentPanel";
-import TitleBar from "../TitleBar";
-import Window from "../Window";
-import { Game } from "./../../game";
-import Industry from "./Industry";
-import Info from "./Info";
-import Market from "./Market";
+import ContentPanel from "../../components/ContentPanel";
+import TitleBar from "../../components/TitleBar";
+import Window from "../../components/Window";
+import { BaseViewProps } from "../constants/view";
+import SubView from "./SubView";
+import { SubViewKind } from "./constants";
 
-enum CurrentViewType {
-  Industry,
-  Info,
-  Market,
-}
-
-interface IPlanetProps {
-  game: Game;
+export interface BasePlanetProps {
   planet: Planet;
 }
 
-type PlanetProps = IPlanetProps;
+type PlanetProps = BasePlanetProps & BaseViewProps;
 
-interface IPlanetState {
-  currentViewType: CurrentViewType;
-}
+const PlanetView: React.FC<PlanetProps> = ({ viewId, planet }) => {
+  const [subVIewKind, setSubViewKind] = useState(SubViewKind.Info);
+  const colony = planet.tryGetColony();
 
-export default class PlanetView extends React.Component<
-  PlanetProps,
-  IPlanetState
-> {
-  public readonly view = document.createElement("div");
+  return (
+    <Window>
+      <TitleBar viewId={viewId} title={`Planet ${planet.id}`} />
+      {colony ? (
+        <nav className="tabs">
+          <div onClick={() => setSubViewKind(SubViewKind.Info)}>Planet</div>
+          <div onClick={() => setSubViewKind(SubViewKind.Market)}>Market</div>
+          <div onClick={() => setSubViewKind(SubViewKind.Industry)}>
+            Industry
+          </div>
+        </nav>
+      ) : undefined}
+      <ContentPanel>
+        <SubView kind={subVIewKind} planet={planet} colony={colony} />
+      </ContentPanel>
+    </Window>
+  );
+};
 
-  public state = { currentViewType: CurrentViewType.Info };
-
-  public render(): JSX.Element {
-    const planet = this.props.planet;
-    const isColonized = planet.isColonized();
-
-    return (
-      <Window>
-        <TitleBar title={`Planet ${planet.id}`} />
-        {isColonized ? (
-          <nav className="tabs">
-            <div onClick={this.switchToInfo}>Planet</div>
-            <div onClick={this.switchToMarket}>Market</div>
-            <div onClick={this.switchToIndustry}>Industry</div>
-          </nav>
-        ) : undefined}
-        <ContentPanel>{this.getCurrentView()}</ContentPanel>
-      </Window>
-    );
-  }
-
-  private switchToInfo = () =>
-    this.setState({ currentViewType: CurrentViewType.Info });
-
-  private switchToMarket = () =>
-    this.setState({ currentViewType: CurrentViewType.Market });
-
-  private switchToIndustry = () =>
-    this.setState({ currentViewType: CurrentViewType.Industry });
-
-  private getCurrentView() {
-    const game = this.props.game;
-    const planet = this.props.planet;
-
-    if (planet.isColonized()) {
-      const colony = planet.getColony();
-      switch (this.state.currentViewType) {
-        case CurrentViewType.Market:
-          // only colonized planets have markets
-          console.assert(colony !== undefined);
-          return <Market game={game} colony={colony} />;
-        case CurrentViewType.Info:
-          return <Info game={game} planet={planet} />;
-        case CurrentViewType.Industry:
-          // only colonized planets have industries
-          console.assert(colony !== undefined);
-          return <Industry gameWrapper={{ game }} colony={colony} />;
-        default:
-          throw new Error("not handled");
-      }
-    }
-
-    // this happens when a uncolonized planet is select after a planet view is openned
-    return <Info game={game} planet={planet} />;
-  }
-}
+export default PlanetView;

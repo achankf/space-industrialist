@@ -7,6 +7,7 @@ import { Galaxy, IGalaxySaveData } from "./model/galaxy";
 import { Industry } from "./model/industry";
 import { Planet } from "./model/planet";
 import { Product } from "./model/product";
+import Bug from "./utils/UnreachableError";
 export interface ISaveData {
   galaxySave: IGalaxySaveData;
 }
@@ -21,7 +22,7 @@ class DB extends Dexie {
 
   public async save(saveData: ISaveData): Promise<number> {
     const ret = await this.saveTable?.put(saveData, 0);
-    if (!ret) {
+    if (ret === undefined) {
       throw new Error("cannot save game");
     }
     return ret;
@@ -38,41 +39,31 @@ export class Game {
     return new Game().reload(saveData);
   }
 
-  private galaxyReadProxy!: GalaxyReadProxy;
-  private galaxyWriteProxy!: GalaxyWriteProxy;
+  private galaxy = new Galaxy();
+  private galaxyReadProxy: GalaxyReadProxy;
+  private galaxyWriteProxy: GalaxyWriteProxy;
 
-  private galaxy!: Galaxy;
   private db = new DB();
-  private isJustReloadedLocal = true;
 
-  private isDirty2 = false;
+  constructor() {
+    this.galaxy = new Galaxy();
+    this.galaxyReadProxy = new GalaxyReadProxy(this.galaxy);
+    this.galaxyWriteProxy = new GalaxyWriteProxy(this.galaxy);
+  }
+
+  public set onChange(handler: () => void) {
+    this.galaxyWriteProxy.onChange = handler;
+  }
 
   public getReader(): GalaxyReadProxy {
     return this.galaxyReadProxy;
   }
 
   public getWriter(): GalaxyWriteProxy {
-    this.isDirty2 = true;
     return this.galaxyWriteProxy;
   }
 
-  public isDirty(): boolean {
-    return this.isDirty2;
-  }
-
-  public resetDirty(): void {
-    this.isDirty2 = false;
-  }
-
-  public isJustReloaded(): boolean {
-    const temp = this.isJustReloadedLocal;
-    this.isJustReloadedLocal = false;
-    return temp;
-  }
-
   public reload(saveData?: ISaveData): { game: Game; isNewGame: boolean } {
-    this.isJustReloadedLocal = true;
-
     let isNewGame = true;
 
     if (saveData) {
@@ -205,8 +196,16 @@ export class GalaxyReadProxy {
     return this.galaxy.getGalacticSupplies(productType);
   }
 
+  public tryGetPlanet(at: CoorT): Planet | undefined {
+    return this.galaxy.getObj(at, MapDataKind.Planet) as Planet | undefined;
+  }
+
   public getPlanet(at: CoorT): Planet {
-    return this.galaxy.getObj(at, MapDataKind.Planet) as Planet;
+    const ret = this.tryGetPlanet(at);
+    if (!ret) {
+      throw new Bug("cannot find planet");
+    }
+    return ret;
   }
 
   public getNumUsedTraders(from: Colony, to: Colony): number {
@@ -247,41 +246,70 @@ export class GalaxyReadProxy {
 }
 
 export class GalaxyWriteProxy {
+  private onChangeHandler?: () => void;
+
+  private triggerOnChange() {
+    if (this.onChangeHandler) {
+      this.onChangeHandler();
+    }
+  }
+
   constructor(private galaxy: Galaxy) {}
 
+  public set onChange(handler: () => void) {
+    if (this.onChangeHandler) {
+      throw new Bug("onChangeHandler should only be set once");
+    }
+    this.onChangeHandler = handler;
+  }
+
   public colonizePlanet(planet: Planet, population: number): Colony {
-    return this.galaxy.colonizePlanet(planet, population);
+    const ret = this.galaxy.colonizePlanet(planet, population);
+    this.triggerOnChange();
+    return ret;
   }
 
   public expandPowerPlant(colony: Colony): void {
     colony.expandPowerPlanet(this.galaxy);
+    this.triggerOnChange();
   }
 
   public withdraw(amount: number): void {
     this.galaxy.withdraw(amount);
+    this.triggerOnChange();
   }
 
   public shutdownIndustry(colony: Colony, industry: Industry): void {
     this.galaxy.shutdownIndustry(colony, industry);
+    this.triggerOnChange();
   }
 
   public addIndustry(productType: Product, colony: Colony): Industry {
-    return this.galaxy.addIndustry(productType, colony);
+    const ret = this.galaxy.addIndustry(productType, colony);
+    this.triggerOnChange();
+    return ret;
   }
 
   public addTradeFleet(from: Colony, to: Colony): Fleet {
-    return this.galaxy.addTradeFleet(from, to);
+    const ret = this.galaxy.addTradeFleet(from, to);
+    this.triggerOnChange();
+    return ret;
   }
 
   public addTrader(): void {
-    return this.galaxy.addTrader();
+    const ret = this.galaxy.addTrader();
+    this.triggerOnChange();
+    return ret;
   }
 
   public turn(): boolean {
-    return this.galaxy.turn();
+    const ret = this.galaxy.turn();
+    this.triggerOnChange();
+    return ret;
   }
 
   public retire(fleet: Fleet): void {
     fleet.retire();
+    this.triggerOnChange();
   }
 }

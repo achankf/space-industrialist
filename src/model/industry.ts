@@ -1,4 +1,5 @@
 import * as Immutable from "immutable";
+import assert from "../utils/assert";
 import { Colony } from "./colony";
 import { Galaxy } from "./galaxy";
 import { Inventory } from "./inventory";
@@ -15,7 +16,7 @@ const REMAIN_CHANGE_EFF_FACTOR = 0.8; // i.e. 20% eff loss when upgrading/down-s
 const BASE_FIXED_COST = 0.3;
 const MIN_FIXED_COST = 0.03;
 const FIXED_COST_OFFSET = BASE_FIXED_COST - MIN_FIXED_COST;
-console.assert(FIXED_COST_OFFSET > 0);
+assert(FIXED_COST_OFFSET > 0);
 
 const BASE_POWER_USAGE = 10;
 
@@ -101,7 +102,7 @@ export class Industry {
 
   public getCostPerUnit(): number {
     const costReduction = 1 - this.operationalEff;
-    console.assert(costReduction >= 0 && costReduction <= 1);
+    assert(costReduction >= 0 && costReduction <= 1);
     return MIN_FIXED_COST + FIXED_COST_OFFSET * costReduction;
   }
 
@@ -191,7 +192,7 @@ export class Industry {
     );
     for (const demandGroup of Industry.getDemandProducts(this.productType)) {
       const consumed = inventory.consume(demandGroup, produceQty);
-      console.assert(consumed === produceQty);
+      assert(consumed === produceQty);
     }
     inventory.putGoods(this.productType, produceQty);
 

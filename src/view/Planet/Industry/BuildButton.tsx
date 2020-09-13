@@ -1,16 +1,16 @@
-import * as React from "react";
-import { Game } from "../../../game";
+import React, { useContext } from "react";
+import { GameContext } from "../../../contexts/GameContext";
 import { INDUSTRY_COST } from "../../../model";
 import { Colony } from "../../../model/colony";
 import { Product } from "../../../model/product";
 
 interface BuildButtonProps {
   colony: Colony;
-  game: Game;
   product: Product;
 }
 
-const BuildButton: React.FC<BuildButtonProps> = ({ colony, game, product }) => {
+const BuildButton: React.FC<BuildButtonProps> = ({ colony, product }) => {
+  const { game } = useContext(GameContext);
   const buildIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
     const isOk =
       e.ctrlKey ||

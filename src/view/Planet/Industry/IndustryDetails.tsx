@@ -1,18 +1,15 @@
-import * as React from "react";
-import { Game } from "../../../game";
+import React, { useContext } from "react";
+import { GameContext } from "../../../contexts/GameContext";
 import { Industry } from "../../../model/industry";
 import { Product } from "../../../model/product";
-import { RAW_MATERIALS, SECONDARY_MATERIALS } from "../../productConstants";
+import { RAW_MATERIALS, SECONDARY_MATERIALS } from "../../constants/product";
 
 interface IndustryDetailsProps {
-  game: Game;
   industry: Industry;
 }
 
-const IndustryDetails: React.FC<IndustryDetailsProps> = ({
-  game,
-  industry,
-}) => {
+const IndustryDetails: React.FC<IndustryDetailsProps> = ({ industry }) => {
+  const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const industryScale = industry.getScale();
   const prodCap = galaxy.prodCap(industry);

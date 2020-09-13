@@ -1,63 +1,34 @@
 import * as React from "react";
-import { Game } from "../../game";
+import { useState } from "react";
 import { Fleet as FleetModel } from "../../model/fleet";
-import ContentPanel from "../ContentPanel";
-import TitleBar from "../TitleBar";
-import Window from "../Window";
-import Cargo from "./Cargo";
-import Route from "./Route";
+import ContentPanel from "../../components/ContentPanel";
+import TitleBar from "../../components/TitleBar";
+import Window from "../../components/Window";
+import { BaseViewProps } from "../constants/view";
+import { SubViewKind } from "./constants";
+import SubView from "./SubView";
 
-interface IFleetProps {
-  gameWrapper: { game: Game };
+export interface BaseFleetProps {
   fleet: FleetModel;
 }
 
-enum CurrentView {
-  Cargo,
-  Route,
-}
+type FleetProps = BaseFleetProps & BaseViewProps;
 
-interface IFleetState {
-  currentView: CurrentView;
-}
+const Fleet: React.FC<FleetProps> = ({ viewId, fleet }) => {
+  const [subViewKind, setSubViewKind] = useState(SubViewKind.Route);
 
-export default class Fleet extends React.Component<IFleetProps, IFleetState> {
-  public state = { currentView: CurrentView.Route };
+  return (
+    <Window>
+      <TitleBar viewId={viewId} title={`Trader ${fleet.id}`} />
+      <ContentPanel>
+        <nav className="tabs">
+          <div onClick={() => setSubViewKind(SubViewKind.Route)}>Route</div>
+          <div onClick={() => setSubViewKind(SubViewKind.Cargo)}>Cargo</div>
+        </nav>
+        <SubView viewId={viewId} kind={subViewKind} fleet={fleet} />
+      </ContentPanel>
+    </Window>
+  );
+};
 
-  public render(): JSX.Element {
-    const fleet = this.props.fleet;
-
-    return (
-      <Window>
-        <TitleBar title={`Trader ${fleet.id}`} />
-        <ContentPanel>
-          <nav className="tabs">
-            <div onClick={this.switchRoutePanel}>Route</div>
-            <div onClick={this.switchCargoPanel}>Cargo</div>
-          </nav>
-          {this.getCurrentView()}
-        </ContentPanel>
-      </Window>
-    );
-  }
-
-  private getCurrentView() {
-    const game = this.props.gameWrapper;
-    const fleet = this.props.fleet;
-
-    switch (this.state.currentView) {
-      case CurrentView.Route:
-        return <Route gameWrapper={game} fleet={fleet} />;
-      case CurrentView.Cargo:
-        return <Cargo fleet={fleet} />;
-    }
-  }
-
-  private switchRoutePanel = () => {
-    this.setState({ currentView: CurrentView.Route });
-  };
-
-  private switchCargoPanel = () => {
-    this.setState({ currentView: CurrentView.Cargo });
-  };
-}
+export default Fleet;

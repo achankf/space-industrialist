@@ -1,144 +1,112 @@
-import * as React from "react";
+import React, { useContext } from "react";
+import { GameContext } from "../contexts/GameContext";
 import { Game } from "../game";
-import { IRouteSegment } from "../model";
-import { Colony } from "../model/colony";
-import ContentPanel from "./ContentPanel";
-import TitleBar from "./TitleBar";
-import Window from "./Window";
+import { IRouteSegment as RouteSegment } from "../model";
+import Window from "../components/Window";
+import ContentPanel from "../components/ContentPanel";
+import TitleBar from "../components/TitleBar";
+import assert from "../utils/assert";
+import { BaseViewProps } from "./constants/view";
 
-interface IRouteOwnProps {
-  game: Game;
-  route: IRouteSegment;
+export function routeString(game: Game, route: RouteSegment): string {
+  const galaxy = game.getReader();
+  const from = galaxy.getPlanet(route.from);
+  const to = galaxy.getPlanet(route.to);
+
+  if (from.id < to.id) {
+    return `Route (${arrow(from.id, to.id)})`;
+  }
+  return `Route (${arrow(to.id, from.id)})`;
 }
+
+export interface BaseRouteProps {
+  route: RouteSegment;
+}
+
+type RouteProps = BaseRouteProps & BaseViewProps;
 
 function arrow(left: number, right: number) {
   return `${left} ⇆ ${right}`;
 }
 
-export default class Route extends React.Component<IRouteOwnProps> {
-  public readonly view = document.createElement("div");
+const Route: React.FC<RouteProps> = ({ viewId, route }) => {
+  const { game } = useContext(GameContext);
+  const galaxyReader = game.getReader();
+  const galaxyWriter = game.getWriter();
 
-  private readonly lowPlanetId: number;
-  private readonly highPlanetId: number;
-  private readonly lowColony: Colony;
-  private readonly highColony: Colony;
+  const from = galaxyReader.getPlanet(route.from);
+  assert(from.isColonized());
+  const to = galaxyReader.getPlanet(route.to);
+  assert(to.isColonized());
 
-  constructor(props: IRouteOwnProps) {
-    super(props);
+  const { low, high } =
+    from.id < to.id ? { low: from, high: to } : { low: to, high: from };
+  const lowPlanetId = low.id;
+  const highPlanetId = high.id;
+  const lowColony = low.getColony();
+  const highColony = high.getColony();
 
-    const game = this.props.game;
-    const route = this.props.route;
-    const galaxy = game.getReader();
+  const numTraders = galaxyReader.getNumUsedTraders(lowColony, highColony);
+  const routeEffPercent = Math.round(
+    galaxyReader.getRouteFuelEff(lowColony, highColony) * 100
+  );
+  const isNoAvailTraders = galaxyReader.getNumUnusedTraders() === 0;
 
-    const fromObj = galaxy.getPlanet(route.from);
-    console.assert(fromObj !== undefined);
-    console.assert(fromObj.isColonized());
-    const toObj = galaxy.getPlanet(route.to);
-    console.assert(toObj !== undefined);
-    console.assert(toObj.isColonized());
+  return (
+    <Window>
+      <TitleBar viewId={viewId} title={routeString(game, route)} />
+      <ContentPanel>
+        <fieldset>
+          <legend>General</legend>
+          <table>
+            <tbody>
+              <tr title="This is the number of traders who trade in this trade lane.">
+                <td>#Traders</td>
+                <td>{numTraders}</td>
+              </tr>
+              <tr title="Fuel efficiency determines how fast spaceships can travel due to extra fuel usage.">
+                <td>Fuel Eff.</td>
+                <td>{`${routeEffPercent}%`}</td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+        <fieldset title="If you have a free trader, you can add the trader to this lane, transferring goods for you. If you don't have a free trader, you can either buy one from the top menu bar or can free one by retiring a trader from the trader screen.">
+          <legend>Add Routes</legend>
+          <table>
+            <tbody>
+              <tr>
+                <td>{arrow(lowPlanetId, highPlanetId)}</td>
+                <td>
+                  <button
+                    onClick={() =>
+                      galaxyWriter.addTradeFleet(lowColony, highColony)
+                    }
+                    disabled={isNoAvailTraders}
+                  >
+                    +
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>{arrow(highPlanetId, lowPlanetId)}</td>
+                <td>
+                  <button
+                    onClick={() =>
+                      galaxyWriter.addTradeFleet(highColony, lowColony)
+                    }
+                    disabled={isNoAvailTraders}
+                  >
+                    +
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+      </ContentPanel>
+    </Window>
+  );
+};
 
-    if (fromObj.id < toObj.id) {
-      this.lowPlanetId = fromObj.id;
-      this.highPlanetId = toObj.id;
-      this.lowColony = fromObj.getColony();
-      this.highColony = toObj.getColony();
-    } else {
-      this.lowPlanetId = toObj.id;
-      this.highPlanetId = fromObj.id;
-      this.lowColony = toObj.getColony();
-      this.highColony = fromObj.getColony();
-    }
-  }
-
-  public render(): JSX.Element {
-    const game = this.props.game;
-    const galaxy = game.getReader();
-    const route = this.props.route;
-
-    const numTraders = galaxy.getNumUsedTraders(
-      this.lowColony,
-      this.highColony
-    );
-    const routeEffPercent = Math.round(
-      galaxy.getRouteFuelEff(this.lowColony, this.highColony) * 100
-    );
-    const isNoAvailTraders = galaxy.getNumUnusedTraders() === 0;
-
-    return (
-      <Window>
-        <TitleBar title={routeString(game, route)} />
-        <ContentPanel>
-          <fieldset>
-            <legend>General</legend>
-            <table>
-              <tbody>
-                <tr title="This is the number of traders who trade in this trade lane.">
-                  <td>#Traders</td>
-                  <td>{numTraders}</td>
-                </tr>
-                <tr title="Fuel efficiency determines how fast spaceships can travel due to extra fuel usage.">
-                  <td>Fuel Eff.</td>
-                  <td>{`${routeEffPercent}%`}</td>
-                </tr>
-              </tbody>
-            </table>
-          </fieldset>
-          <fieldset title="If you have a free trader, you can add the trader to this lane, transferring goods for you. If you don't have a free trader, you can either buy one from the top menu bar or can free one by retiring a trader from the trader screen.">
-            <legend>Add Routes</legend>
-            <table>
-              <tbody>
-                <tr>
-                  <td>{`${arrow(this.lowPlanetId, this.highPlanetId)}`}</td>
-                  <td>
-                    <button
-                      onClick={this.addFleetLowToHigh}
-                      disabled={isNoAvailTraders}
-                    >
-                      +
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{`${arrow(this.highPlanetId, this.lowPlanetId)}`}</td>
-                  <td>
-                    <button
-                      onClick={this.addFleetHighToLow}
-                      disabled={isNoAvailTraders}
-                    >
-                      +
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </fieldset>
-        </ContentPanel>
-      </Window>
-    );
-  }
-
-  private addFleetLowToHigh = () => {
-    const game = this.props.game;
-    const galaxy = game.getWriter();
-    galaxy.addTradeFleet(this.lowColony, this.highColony);
-  };
-
-  private addFleetHighToLow = () => {
-    const game = this.props.game;
-    const galaxy = game.getWriter();
-    galaxy.addTradeFleet(this.highColony, this.lowColony);
-  };
-}
-
-export function routeString(game: Game, route: IRouteSegment): string {
-  const galaxy = game.getReader();
-  const fromObj = galaxy.getPlanet(route.from);
-  console.assert(fromObj !== undefined);
-  const toObj = galaxy.getPlanet(route.to);
-  console.assert(toObj !== undefined);
-
-  if (fromObj.id < toObj.id) {
-    return `Route (${arrow(fromObj.id, toObj.id)})`;
-  }
-  return `Route (${arrow(toObj.id, fromObj.id)})`;
-}
+export default Route;

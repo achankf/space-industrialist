@@ -1,5 +1,6 @@
 import * as Immutable from "immutable";
 import { average, sum, toIt } from "myalgo-ts";
+import assert from "../utils/assert";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
 import { Inventory } from "./inventory";
@@ -48,7 +49,7 @@ export class Colony {
     elasticity: number,
     basePrice: number
   ): number {
-    console.assert(elasticity > 0);
+    assert(elasticity > 0);
 
     // returns ratio in [0,2]
     const ratio =
@@ -61,7 +62,7 @@ export class Colony {
     // score ranges in (0,Math.pow(2,elasticity)]
     const score = Math.pow(ratio, elasticity);
     const price = basePrice * score;
-    console.assert(Number.isFinite(price));
+    assert(Number.isFinite(price));
 
     return price;
   }
@@ -339,7 +340,7 @@ export class Colony {
   }
 
   public expandPowerPlanet(galaxy: Galaxy): void {
-    console.assert(this.canExpandPowerPlant(galaxy));
+    assert(this.canExpandPowerPlant(galaxy));
     this.powerPlanetLevel += 1;
   }
 
@@ -389,9 +390,9 @@ export class Colony {
     const basePrice = Colony.basePrice(product);
     const elasticity = Colony.elasticity(product);
     const est = Colony.estimatePrice(demand, supply, elasticity, basePrice);
-    console.assert(est >= 0);
+    assert(est >= 0);
     const minPrice = MIN_PRICE[product];
-    console.assert(Number.isFinite(minPrice));
+    assert(Number.isFinite(minPrice));
     return Math.max(minPrice, est);
   }
 
@@ -402,7 +403,7 @@ export class Colony {
     maxQty: number,
     minPrice: number
   ): number {
-    console.assert(maxQty >= 0);
+    assert(maxQty >= 0);
 
     const marketInventory = this.marketInventory;
     const marketQty = marketInventory.getQty(product);
@@ -412,7 +413,7 @@ export class Colony {
     for (;;) {
       const newMarketQty = marketQty + bought;
       const price = this.realPrice(product, newMarketQty);
-      console.assert(price > 0);
+      assert(price > 0);
       if (maxQty === bought || price < minPrice) {
         break;
       }
@@ -435,7 +436,7 @@ export class Colony {
     maxPrice: number,
     isInternalBuyer = false
   ): void {
-    console.assert(maxQty >= 0);
+    assert(maxQty >= 0);
 
     const marketInventory = this.marketInventory;
     const marketQty = marketInventory.getQty(product);
@@ -446,7 +447,7 @@ export class Colony {
     let sold = 0;
     for (;;) {
       const newMarketQty = marketQty - sold;
-      console.assert(newMarketQty >= 0);
+      assert(newMarketQty >= 0);
       const price = this.realPrice(product, newMarketQty);
       if (
         maxQty === sold ||

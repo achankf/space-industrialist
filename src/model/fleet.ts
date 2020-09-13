@@ -1,5 +1,6 @@
 import * as Immutable from "immutable";
 import { equal, subtract, sum } from "myalgo-ts";
+import assert from "../utils/assert";
 import { Colony } from "./colony";
 import { Galaxy } from "./galaxy";
 import { Inventory } from "./inventory";
@@ -55,9 +56,7 @@ export class Fleet implements ILocatable {
 
   public getSpeed(galaxy: Galaxy): number {
     const from = this.getStop();
-    console.assert(from !== undefined);
     const to = this.getNextStop();
-    console.assert(to !== undefined);
 
     const fuelEff = galaxy.getRouteFuelEff(from, to);
     const fuelBonus = 1 + fuelEff;
@@ -81,7 +80,7 @@ export class Fleet implements ILocatable {
   }
 
   public setRoute(...route: Colony[]): void {
-    console.assert(route.length > 0);
+    assert(route.length > 0);
     this.route = route;
     this.state = FleetState.Hold;
   }
@@ -94,7 +93,7 @@ export class Fleet implements ILocatable {
     if (this.route.length > 0) {
       this.state = FleetState.Move;
     } else {
-      console.assert(this.state === FleetState.Hold);
+      assert(this.state === FleetState.Hold);
     }
   }
 
@@ -134,7 +133,7 @@ export class Fleet implements ILocatable {
   ): Map<Product, number> {
     const cargoSpace = this.cargo.getEmptySpace();
     // this method assign at least 1 unit space per commodity
-    console.assert(cargoSpace >= allProducts().length);
+    assert(cargoSpace >= allProducts().length);
     const totalDemand = sum(...routeDemands);
     const partition = new Map<Product, number>();
 
@@ -152,7 +151,7 @@ export class Fleet implements ILocatable {
 
       // underestimate "a bit"
       const qty = Math.max(1, Math.floor((demand / totalDemand) * cargoSpace));
-      console.assert(Number.isFinite(qty));
+      assert(Number.isFinite(qty));
       partition.set(product, qty);
     }
 
@@ -161,7 +160,9 @@ export class Fleet implements ILocatable {
 
   private getNextStop(): Colony {
     const next = this.nextStopIdx();
-    return this.route[next];
+    const ret = this.route[next];
+    assert(!!ret);
+    return ret;
   }
 
   private handleDocked(galaxy: Galaxy): void {
@@ -228,7 +229,7 @@ export class Fleet implements ILocatable {
         if (qty === 0) {
           continue;
         }
-        console.assert(qty > 0);
+        assert(qty > 0);
         stop.trySell(galaxy, this.cargo, product, qty, Infinity); // Market.basePrice(product));
       }
     }
@@ -261,11 +262,15 @@ export class Fleet implements ILocatable {
   }
 
   private getStop(): Colony {
-    return this.route[this.routeAt];
+    const ret = this.route[this.routeAt];
+    assert(!!ret);
+    return ret;
   }
 
   private nextStop(): Colony {
-    return this.route[this.nextStopIdx()];
+    const ret = this.route[this.nextStopIdx()];
+    assert(!!ret);
+    return ret;
   }
 
   private nextStopIdx(): number {

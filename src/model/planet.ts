@@ -1,3 +1,4 @@
+import Bug from "../utils/UnreachableError";
 import { Colony } from "./colony";
 import { RawMaterial } from "./product";
 import { ILocatable, MapDataKind } from ".";
@@ -33,9 +34,7 @@ export class Planet implements ILocatable {
 
   public getColony(): Colony {
     if (!this.colony) {
-      throw new Error(
-        "bug: this method should be called for colonized planets"
-      );
+      throw new Bug("this method should be called for colonized planets");
     }
     return this.colony;
   }

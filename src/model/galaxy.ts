@@ -17,6 +17,8 @@ import {
   uniq,
 } from "myalgo-ts";
 import getOrThrow from "../utils/getOrThrow";
+import assert from "../utils/assert";
+import Bug from "../utils/UnreachableError";
 import { Colony, IColony } from "./colony";
 import { Fleet, IFleet } from "./fleet";
 import { IIndustry, Industry } from "./industry";
@@ -96,9 +98,8 @@ export class Galaxy {
     for (const planet of planets.values()) {
       const coor = coors.get(planet.id);
       if (!coor) {
-        throw new Error("bug: coor not found");
+        throw new Bug("coor not found");
       }
-      console.assert(coor !== undefined);
       galaxy.addObj(planet, coor.coor);
     }
 
@@ -317,7 +318,7 @@ export class Galaxy {
   }
 
   public addTradeFleet(from: Colony, to: Colony): Fleet {
-    console.assert(this.numTraders >= 1);
+    assert(this.numTraders >= 1);
     this.numTraders--;
 
     const fleet = new Fleet(this.nextId(), this.createInventory(1000), [
@@ -332,7 +333,7 @@ export class Galaxy {
 
   public removeFleet(fleet: Fleet): void {
     const route = fleet.getRoute();
-    console.assert(route.length === 2);
+    assert(route.length === 2);
     const colony1 = route[0];
     const colony2 = route[1];
 
@@ -343,7 +344,7 @@ export class Galaxy {
       "bug: allFleets not found"
     );
     const isDeleted = allFleets.delete(fleet);
-    console.assert(isDeleted); // otherwise removing an nonexist object
+    assert(isDeleted); // otherwise removing an nonexist object
 
     this.removeObj(fleet);
     this.numTraders++;
@@ -367,7 +368,7 @@ export class Galaxy {
   }
 
   public colonizePlanet(planet: Planet, population: number): Colony {
-    console.assert(this.numColonists >= 1);
+    assert(this.numColonists >= 1);
     this.numColonists -= 1;
     const colony = new Colony(
       this.nextId(),
@@ -385,7 +386,6 @@ export class Galaxy {
   }
 
   public addIndustry(productType: Product, colony: Colony): Industry {
-    console.assert(colony !== undefined);
     const industry = new Industry(this.nextId(), productType, colony);
     this.addIndustryHelper(industry);
     return industry;
@@ -397,7 +397,7 @@ export class Galaxy {
       colony,
       "bug: cannot get colony industy"
     );
-    console.assert(industries !== undefined);
+    assert(industries !== undefined);
 
     // get depended products for all industries except the target
     const overall = Immutable.Seq(industries)
@@ -410,11 +410,11 @@ export class Galaxy {
 
     for (const product of depend.subtract(overall)) {
       const isDeleted = this.consumers[product].delete(colony);
-      console.assert(isDeleted);
+      assert(isDeleted);
     }
     {
       const isDeleted = industries.delete(industry);
-      console.assert(isDeleted);
+      assert(isDeleted);
     }
   }
 
@@ -457,7 +457,7 @@ export class Galaxy {
   }
 
   public addColonists(growthDelta: number): void {
-    console.assert(growthDelta >= 0);
+    assert(growthDelta >= 0);
     this.numColonists += growthDelta / 10;
   }
 
@@ -482,7 +482,7 @@ export class Galaxy {
   }
 
   public getScore(): number {
-    console.assert(this.timestamp !== 0);
+    assert(this.timestamp !== 0);
     const score = (this.money - STARTING_CAPITAL) / this.timestamp;
     if (score <= 0) {
       return 0;
@@ -547,10 +547,10 @@ export class Galaxy {
     return this.locatableCoors;
   }
 
-  public getObj(at: CoorT, kind: MapDataKind.Planet): ILocatable {
+  public getObj(at: CoorT, kind: MapDataKind.Planet): ILocatable | undefined {
     return this.searchNearbyObjs(at)
       .filter((x) => x.kind === kind)
-      .first() as ILocatable;
+      .first() as ILocatable | undefined;
   }
 
   public searchNearbyObjs(
@@ -644,7 +644,7 @@ export class Galaxy {
     from: Colony,
     next: Colony
   ): Colony[] {
-    console.assert(from !== next);
+    assert(from !== next);
 
     const recal = () =>
       new Map(
@@ -683,12 +683,12 @@ export class Galaxy {
   }
 
   private getNextTradeNode(from: Colony, to: Colony): Colony {
-    console.assert(from !== to); // caller checks this
-    console.assert(this.tradeRoutePaths !== undefined);
+    assert(from !== to); // caller checks this
+    assert(this.tradeRoutePaths !== undefined);
     const ret = this.tradeRoutePaths.next(from, to);
     if (!ret) {
       // since we're dealing with the minimum spanning tree of a complete undirected graph, all vertices are reachable
-      throw new Error("bug: all vertices should be reachable");
+      throw new Bug("all vertices should be reachable");
     }
     return ret;
   }
@@ -768,18 +768,18 @@ export class Galaxy {
       "bug: existing object should be indexed"
     );
     const isDeleted1 = objs.delete(obj);
-    console.assert(isDeleted1, "index does not have obj");
+    assert(isDeleted1, "index does not have obj");
 
     if (objs.size === 0) {
       const isDeleted2 = this.coorIndices.delete(idxCoor);
-      console.assert(isDeleted2);
+      assert(isDeleted2);
     }
   }
 
   private removeObj(obj: ILocatable): void {
     this.removeFromIdx(obj);
     const isDeleted = this.locatableCoors.delete(obj);
-    console.assert(isDeleted);
+    assert(isDeleted);
   }
 
   private addToIdx(obj: ILocatable, coor: CoorT): void {
@@ -788,7 +788,7 @@ export class Galaxy {
       idxCoor,
       (): Set<ILocatable> => new Set()
     );
-    console.assert(!objs.has(obj), "double-adding object to index");
+    assert(!objs.has(obj), "double-adding object to index");
     objs.add(obj);
   }
 
@@ -856,7 +856,7 @@ export class Galaxy {
   private colonizePlanetHelper(colony: Colony, isCalTradeRoutes = true): void {
     const planet = colony.getHomePlanet();
 
-    console.assert(this.locatableCoors.get(planet) !== undefined); // sanity check
+    assert(this.locatableCoors.get(planet) !== undefined); // sanity check
 
     this.colonies.push(colony);
     planet.colonized(colony);
@@ -906,10 +906,10 @@ export class Galaxy {
   }
 
   private addTradeFleetHelper(fleet: Fleet): void {
-    console.assert(this.locatableCoors.get(fleet) !== undefined); // sanity check
+    assert(this.locatableCoors.get(fleet) !== undefined); // sanity check
     const [from, to] = fleet.getRoute();
-    console.assert(from !== undefined);
-    console.assert(to !== undefined);
+    assert(from !== undefined);
+    assert(to !== undefined);
     const fleets = this.tradeFleets.getOrSet(
       [from, to],
       (): Set<Fleet> => new Set()

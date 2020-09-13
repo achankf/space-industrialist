@@ -1,15 +1,11 @@
-import * as React from "react";
-import { connect } from "react-redux";
-import { Dispatch } from "redux";
+import React, { createRef, useContext, useState } from "react";
 import LZString from "lz-string";
 import { Game, ISaveData } from "../game";
-import {
-  addClosable,
-  ClosableAction,
-  ClosablePanelType,
-} from "./action/closable_action";
-import TitleBar from "./TitleBar";
-import Window from "./Window";
+import Window from "../components/Window";
+import { GameContext } from "../contexts/GameContext";
+import TitleBar from "../components/TitleBar";
+import { ViewContext } from "../contexts/ViewContext";
+import { BaseViewProps, ViewKind } from "./constants/view";
 
 function toSave(game: Game) {
   const json = JSON.stringify(game.serialize());
@@ -39,106 +35,54 @@ function fromSave(input: string) {
   throw new Error("not a valid save");
 }
 
-interface IImportExportProps {
-  game: Game;
-}
+export type ImportExportProps = BaseViewProps;
 
-interface IImportExportDispatchProps {
-  showTutorial: () => void;
-}
+const ImportExport: React.FC<ImportExportProps> = ({ viewId: id }) => {
+  const { game } = useContext(GameContext);
+  const { setCurrentView } = useContext(ViewContext);
+  const [saveData, setSaveData] = useState(toSave(game));
+  const textareaRef = createRef<HTMLTextAreaElement>();
 
-type ImportExportProps = IImportExportProps & IImportExportDispatchProps;
-
-interface IImportExportState {
-  saveData: string;
-}
-
-class ImportExport extends React.Component<
-  ImportExportProps,
-  IImportExportState
-> {
-  private textareaRef = React.createRef<HTMLTextAreaElement>();
-
-  constructor(props: ImportExportProps) {
-    super(props);
-    this.state = { saveData: toSave(this.props.game) };
-  }
-
-  public render() {
-    return (
-      <Window>
-        <TitleBar title="Import/Export Save" />
-        <textarea
-          spellCheck={false}
-          cols={45}
-          rows={30}
-          value={this.state.saveData}
-          onChange={this.updateState}
-          onClick={this.textareaClick}
-          ref={this.textareaRef}
-        />
-        <div>
-          <button onClick={this.clearSave}>Clear</button>
-          <button onClick={this.importSave}>Import</button>
-          <button onClick={this.copySave}>Copy</button>
-          <button onClick={this.refreshSave}>Refresh</button>
-          <button onClick={this.restartGame}>Restart Game</button>
-        </div>
-      </Window>
-    );
-  }
-
-  public textareaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
-    e.stopPropagation();
-  };
-
-  public componentDidMount() {
-    const current = this.textareaRef.current;
-    if (!current) {
-      throw new Error("bug: textarea not ready");
-    }
-    current.spellcheck = false;
-  }
-
-  private copySave = () => {
-    this.textareaRef.current?.select();
+  function copySave() {
+    textareaRef.current?.select();
     document.execCommand("Copy");
-  };
+  }
 
-  private clearSave = () => {
-    this.setState(() => ({ saveData: "" }));
-  };
-
-  private refreshSave = () => {
-    this.setState(() => ({ saveData: toSave(this.props.game) }));
-  };
-
-  private importSave = async () => {
-    const saveData = fromSave(this.state.saveData);
-    const game = this.props.game;
-    game.reload(saveData);
+  async function importSave() {
+    game.reload(fromSave(saveData));
     await game.save();
-  };
+  }
 
-  private restartGame = async () => {
-    const game = this.props.game;
-    const isOk = confirm("Are you sure?");
+  async function restartGame() {
+    const isOk = window.confirm("Are you sure?");
     if (isOk) {
       game.reload();
       await game.save();
-      this.props.showTutorial();
+      setCurrentView({ kind: ViewKind.Tutorial });
     }
-  };
+  }
 
-  private updateState = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    this.setState({ saveData: e.target.value });
-  };
-}
+  return (
+    <Window>
+      <TitleBar viewId={id} title="Import/Export Save" />
+      <textarea
+        spellCheck={false}
+        cols={45}
+        rows={30}
+        value={saveData}
+        onChange={(e) => setSaveData(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        ref={textareaRef}
+      />
+      <div>
+        <button onClick={() => setSaveData("")}>Clear</button>
+        <button onClick={importSave}>Import</button>
+        <button onClick={copySave}>Copy</button>
+        <button onClick={() => setSaveData(toSave(game))}>Refresh</button>
+        <button onClick={restartGame}>Restart Game</button>
+      </div>
+    </Window>
+  );
+};
 
-const dispatchers = (
-  dispatch: Dispatch<ClosableAction>
-): IImportExportDispatchProps => ({
-  showTutorial: () => dispatch(addClosable(ClosablePanelType.Tutorial)),
-});
-
-export default connect(null, dispatchers)(ImportExport);
+export default ImportExport;

@@ -1,5 +1,5 @@
-import * as React from "react";
-import { Game } from "../../../game";
+import React, { useContext } from "react";
+import { GameContext } from "../../../contexts/GameContext";
 import { Colony } from "../../../model/colony";
 import EncourageGrowth from "./EncourageGrowth";
 import ExpandButton from "./ExpandButton";
@@ -11,13 +11,12 @@ import PowerProducer from "./PowerProducer";
 interface ColonyDetailsProps {
   colony: Colony;
   expandPowerPlant: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  game: Game;
 }
 const ColonyDetails: React.FC<ColonyDetailsProps> = ({
   colony,
   expandPowerPlant,
-  game,
 }) => {
+  const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const {
     industrialUsage,

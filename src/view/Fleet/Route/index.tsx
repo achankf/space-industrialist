@@ -1,63 +1,48 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Game } from "../../../game";
+import { useContext } from "react";
+import { GameContext } from "../../../contexts/GameContext";
+import { ViewContext } from "../../../contexts/ViewContext";
 import { Fleet } from "../../../model/fleet";
-import { close } from "../../action/closable_action";
 import DestinationTable from "./DestinationTable";
 
-interface IRouteProps {
-  gameWrapper: { game: Game };
+interface RouteProps {
+  viewId: symbol;
   fleet: Fleet;
 }
 
-interface IRouteDispatchProps {
-  closePanel: () => void;
-}
+const Route: React.FC<RouteProps> = ({ viewId, fleet }) => {
+  const { game } = useContext(GameContext);
+  const { closeView } = useContext(ViewContext);
+  const galaxy = game.getReader();
+  const speed = galaxy.getFleetSpeed(fleet).toFixed(2);
 
-type RouteProps = IRouteProps & IRouteDispatchProps;
-
-export class Route extends React.PureComponent<RouteProps> {
-  public render(): JSX.Element {
-    const game = this.props.gameWrapper.game;
-    const galaxy = game.getReader();
-    const fleet = this.props.fleet;
-    const speed = galaxy.getFleetSpeed(fleet).toFixed(2);
-
-    return (
-      <div>
-        <fieldset title="This table shows a list of places that the trader is going to trader. Dest means the trader is heading towards that place.">
-          <legend>General</legend>
-          <div title="The speed indicates how far the trader is going to move per day.">
-            Speed: {speed}
-          </div>
-          <button
-            disabled={galaxy.isRetired(fleet)}
-            onClick={this.retireFleet}
-            title="The trader will return to the trader pool and to be reassigned."
-          >
-            Retire trader
-          </button>
-        </fieldset>
-        <fieldset title="This table shows a list of places that the trader is going to trader. Dest means the trader is heading towards that place.">
-          <legend>Route</legend>
-          <DestinationTable fleet={fleet} game={game} />
-        </fieldset>
-      </div>
-    );
+  function retireFleet() {
+    const galaxy = game.getWriter();
+    galaxy.retire(fleet);
+    closeView(viewId);
   }
 
-  private retireFleet = () => {
-    const game = this.props.gameWrapper.game;
-    const galaxy = game.getWriter();
-    const fleet = this.props.fleet;
-    galaxy.retire(fleet);
-    this.props.closePanel();
-  };
-}
+  return (
+    <div>
+      <fieldset title="This table shows a list of places that the trader is going to trader. Dest means the trader is heading towards that place.">
+        <legend>General</legend>
+        <div title="The speed indicates how far the trader is going to move per day.">
+          Speed: {speed}
+        </div>
+        <button
+          disabled={galaxy.isRetired(fleet)}
+          onClick={retireFleet}
+          title="The trader will return to the trader pool and to be reassigned."
+        >
+          Retire trader
+        </button>
+      </fieldset>
+      <fieldset title="This table shows a list of places that the trader is going to trader. Dest means the trader is heading towards that place.">
+        <legend>Route</legend>
+        <DestinationTable fleet={fleet} game={game} />
+      </fieldset>
+    </div>
+  );
+};
 
-export default connect<unknown, IRouteDispatchProps, IRouteProps>(
-  undefined,
-  (dispatch) => ({
-    closePanel: () => dispatch(close()),
-  })
-)(Route);
+export default Route;

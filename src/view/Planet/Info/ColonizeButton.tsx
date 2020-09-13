@@ -1,11 +1,11 @@
-import * as React from "react";
-import { Game } from "../../../game";
+import React, { useContext } from "react";
+import { GameContext } from "../../../contexts/GameContext";
 
 interface ColonizeButtonProps {
   colonize: () => void;
-  game: Game;
 }
-const ColonizeButton: React.FC<ColonizeButtonProps> = ({ colonize, game }) => {
+const ColonizeButton: React.FC<ColonizeButtonProps> = ({ colonize }) => {
+  const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const isDisabled = galaxy.getNumColonists() < 1;
 

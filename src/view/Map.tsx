@@ -1,126 +1,131 @@
 import * as Hammer from "hammerjs";
 import * as Immutable from "immutable";
-import { SortedTrie, add, norm, project, subtract } from "myalgo-ts";
-import * as React from "react";
-import { connect } from "react-redux";
-import { Dispatch } from "redux";
-import { Game } from "../game";
-import { CoorT, IMapData, IRouteSegment, MapDataKind } from "../model";
+import { SortedTrie, add, norm, project, subtract, Vec2D } from "myalgo-ts";
+import React, { useContext, useEffect, useState } from "react";
+import { GameContext } from "../contexts/GameContext";
+import { ViewContext } from "../contexts/ViewContext";
+import { CoorT, IRouteSegment, MapDataKind } from "../model";
 import { Colony } from "../model/colony";
 import { Fleet as FleetModel } from "../model/fleet";
 import { colonyCmp } from "../model/galaxy";
 import { Planet as PlanetModel } from "../model/planet";
 import { Product, RawMaterial } from "../model/product";
-import {
-  ClosableAction,
-  ClosablePanelType,
-  addClosable,
-} from "./action/closable_action";
+import assert from "../utils/assert";
+import { ViewKind } from "./constants/view";
 
 const MIN_GRID_SIZE = 50;
 const MAX_GRID_SIZE = 300;
 const RADIUS = 3 / 10;
 
-interface IMapViewSaveData {
-  topLeft: [number, number];
-  gridSize: number;
+let gridSize = MIN_GRID_SIZE;
+function setGridSize(value: number) {
+  gridSize = value;
 }
 
-interface IMapDispatchProps {
-  addFleetPanel: (fleet: FleetModel) => void;
-  addPlanetPanel: (planet: PlanetModel) => void;
-  addRoutePanel: (route: IRouteSegment) => void;
-  addSelector: (objs: IMapData[]) => void;
+let topLeft: Vec2D = [0, 0];
+function setTopLeft(value: Vec2D) {
+  topLeft = value;
 }
 
-interface IMapOwnProps {
-  gameWrapper: { game: Game };
+let cachedGrid = document.createElement("canvas");
+function setCachedGrid(value: HTMLCanvasElement) {
+  cachedGrid = value;
 }
 
-type MapProps = IMapOwnProps & IMapDispatchProps;
+let updateAnimation: (() => void) | undefined = undefined;
+function setUpdateAnimation(value: (() => void) | undefined) {
+  updateAnimation = value;
+}
 
-class Map extends React.PureComponent<MapProps> {
-  private canvasRef = React.createRef<HTMLCanvasElement>();
+const Map: React.FC = () => {
+  const { game, gameUpdateFlag } = useContext(GameContext);
+  const { setCurrentView } = useContext(ViewContext);
+  const galaxy = game.getReader();
 
-  // UI data
-  private topLeft: [number, number];
-  private gridSize = MIN_GRID_SIZE;
-  private cachedGrid: HTMLCanvasElement;
-  private updateAnimation?: () => void;
+  // somehow hooks don't persist outside of rendering
+  //TODO find a way to put the global variables into scope
 
-  constructor(props: MapProps) {
-    super(props);
-    this.cachedGrid = document.createElement("canvas");
+  // const [topLeft, setTopLeft] = useState(game.getReader().calCenter());
+  // const [gridSize, setGridSize] = useState(MIN_GRID_SIZE);
+  // const [cachedGrid, setCachedGrid] = useState(
+  //   document.createElement("canvas")
+  // );
+  // const [updateAnimation, setUpdateAnimation] = useState<
+  //   (() => void) | undefined
+  // >(undefined);
+  const [isNewAnimationFrame, triggerNewAnimationFrame] = useState({});
 
-    const game = this.props.gameWrapper.game;
-    this.topLeft = game.getReader().calCenter();
-  }
+  // setup global variables
+  useEffect(() => {
+    topLeft = game.getReader().calCenter();
+  }, []);
 
-  public serialize(): IMapViewSaveData {
-    return {
-      gridSize: this.gridSize,
-      topLeft: this.topLeft,
-    };
-  }
-
-  public componentDidMount() {
-    const game = this.props.gameWrapper.game;
-    const canvas = this.canvasRef.current;
-
-    if (!canvas) {
-      throw new Error("bug: canvas is not ready");
-    }
+  // setup event handlers and the infinite event loop
+  useEffect(() => {
+    const canvas = getMapCanvas();
 
     const gesture = new Hammer.Manager(canvas);
     const double = new Hammer.Tap({ event: "doubletap", taps: 2 });
     const single = new Hammer.Tap({ event: "singletap" });
-    const pan = new Hammer.Pan().set({ direction: Hammer.DIRECTION_ALL });
-    gesture.add([new Hammer.Pinch(), double, single, pan]);
+    const panRecognizer = new Hammer.Pan().set({
+      direction: Hammer.DIRECTION_ALL,
+    });
+    gesture.add([new Hammer.Pinch(), double, single, panRecognizer]);
     double.recognizeWith(single);
     single.requireFailure(double);
 
     // setup events
-    gesture.on("singletap", (e) => this.click(game, e));
-    gesture.on("doubletap", (e) => this.dblclick(game, e));
-    gesture.on("pinch", (e) => this.wheel(game, e));
-    gesture.on("pan", (e) => this.pan(game, e));
+    gesture.on("singletap", click);
+    gesture.on("doubletap", dblclick);
+    gesture.on("pinch", wheel);
+    gesture.on("pan", pan);
 
     // mouse wheel event handled separately
-    canvas.addEventListener("wheel", (e) => this.wheel(game, e));
+    canvas.addEventListener("wheel", wheel);
 
     const resize = () => {
       const width = document.body.clientWidth;
       const height = document.body.clientHeight;
       canvas.width = width;
       canvas.height = height;
-      this.cachedGrid.width = width;
-      this.cachedGrid.height = height;
-      this.cachedGrid = this.drawGrid(game);
+      cachedGrid.width = width;
+      cachedGrid.height = height;
+      setCachedGrid(drawGrid());
     };
 
     window.addEventListener("resize", resize);
 
     resize();
-    this.draw();
-  }
 
-  public render() {
-    return <canvas id="map" ref={this.canvasRef} />;
-  }
+    function repeat() {
+      triggerNewAnimationFrame({});
+      requestAnimationFrame(repeat);
+    }
+    repeat();
+  }, []);
 
-  private draw = () => {
-    const game = this.props.gameWrapper.game;
+  // update cached grid whenver game is mutated
+  useEffect(() => {
+    setCachedGrid(drawGrid());
+  }, [gameUpdateFlag]);
 
-    if (this.updateAnimation !== undefined) {
-      this.updateAnimation();
-      this.cachedGrid = this.drawGrid(game);
+  // event loop
+  useEffect(() => {
+    draw();
+  }, [isNewAnimationFrame]);
+
+  return <canvas id="map" />;
+
+  // end of component
+  // below are helper functions for drawing the map
+
+  function draw() {
+    if (updateAnimation !== undefined) {
+      updateAnimation();
+      setCachedGrid(drawGrid());
     }
 
-    const canvas = this.canvasRef.current;
-    if (!canvas) {
-      throw new Error("bug: canvas is not ready");
-    }
-
+    const canvas = getMapCanvas();
     // draw the map
     const width = document.body.clientWidth;
     const height = document.body.clientHeight;
@@ -129,28 +134,12 @@ class Map extends React.PureComponent<MapProps> {
       throw new Error("cannot create 2D graphics context");
     }
     ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(this.drawGrid(game), 0, 0);
-    ctx.drawImage(this.drawObjects(game), 0, 0);
-
-    requestAnimationFrame(this.draw);
-  };
-
-  private getCanvasContext(
-    canvas?: HTMLCanvasElement
-  ): [HTMLCanvasElement, CanvasRenderingContext2D] {
-    if (!canvas) {
-      canvas = document.createElement("canvas");
-    }
-    const context = canvas.getContext("2d");
-    if (!context) {
-      throw new Error("cannot create context");
-    }
-    return [canvas, context];
+    ctx.drawImage(cachedGrid, 0, 0);
+    ctx.drawImage(drawObjects(), 0, 0);
   }
 
-  private drawObjects(game: Game) {
-    const galaxy = game.getReader();
-    const [canvas, ctx] = this.getCanvasContext();
+  function drawObjects() {
+    const [canvas, ctx] = createBlankCanvas();
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
 
@@ -167,7 +156,7 @@ class Map extends React.PureComponent<MapProps> {
       ctx.fillStyle = "yellow";
       ctx.strokeStyle = "yellow";
       for (const [obj, coor] of fleets) {
-        const [vpX, vpY] = this.toVpCoor(coor);
+        const [vpX, vpY] = toVpCoor(coor);
 
         const fleet = obj as FleetModel;
         const angle = galaxy.getAngle(fleet);
@@ -176,7 +165,7 @@ class Map extends React.PureComponent<MapProps> {
         ctx.translate(vpX, vpY);
         ctx.rotate(angle);
         ctx.scale(0.5, 0.5);
-        this.drawTriangle(ctx);
+        drawTriangle(ctx);
         ctx.fill();
         ctx.restore();
       }
@@ -200,12 +189,12 @@ class Map extends React.PureComponent<MapProps> {
       // draw planet symbols (colored circles)
       ctx.fillStyle = "yellow";
       ctx.strokeStyle = "yellow";
-      const radius = RADIUS * this.gridSize;
+      const radius = RADIUS * gridSize;
 
       const drawPlanetCircle = (color: string, resource: RawMaterial) => {
         const planetByResource = allPlanets.get(resource);
         if (!planetByResource) {
-          console.assert(
+          assert(
             false,
             "all planets should be distributed about evenly in terms of raw material types"
           ); // TODO validate this
@@ -214,9 +203,9 @@ class Map extends React.PureComponent<MapProps> {
         const planets = planetByResource.values();
         ctx.fillStyle = color;
         for (const [, coor] of planets) {
-          const [vpX, vpY] = this.toVpCoor(coor);
+          const [vpX, vpY] = toVpCoor(coor);
           ctx.beginPath();
-          this.drawCircle(ctx, vpX, vpY, radius);
+          drawCircle(ctx, vpX, vpY, radius);
           ctx.fill();
         }
       };
@@ -231,10 +220,10 @@ class Map extends React.PureComponent<MapProps> {
       ctx.fillStyle = "yellow";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      const fontSize = Math.ceil(RADIUS * this.gridSize);
+      const fontSize = Math.ceil(RADIUS * gridSize);
       ctx.font = `${fontSize}px sans-serif`;
       for (const [planet, coor] of planetArray) {
-        const [vpX, vpY] = this.toVpCoor(coor);
+        const [vpX, vpY] = toVpCoor(coor);
         ctx.beginPath();
         ctx.fillText(`${planet.id}`, vpX, vpY);
       }
@@ -246,8 +235,8 @@ class Map extends React.PureComponent<MapProps> {
       for (const [planet, coor] of planetArray) {
         if (planet.tryGetColony() !== undefined) {
           ctx.beginPath();
-          const [vpX, vpY] = this.toVpCoor(coor);
-          this.drawCircle(ctx, vpX, vpY, radius);
+          const [vpX, vpY] = toVpCoor(coor);
+          drawCircle(ctx, vpX, vpY, radius);
           ctx.stroke();
         }
       }
@@ -260,17 +249,46 @@ class Map extends React.PureComponent<MapProps> {
     return canvas;
   }
 
-  private drawCircle(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    r: number
-  ) {
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
+  function drawGrid() {
+    const canvas = cachedGrid;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("cannot create context");
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#494949";
+
+    // draw all horizontal lines
+    const startX = (((topLeft[0] * gridSize) % gridSize) + gridSize) % gridSize;
+    for (let curX = 0; curX <= canvas.width; curX += gridSize) {
+      const curX2 = Math.ceil(curX + startX);
+      ctx.beginPath();
+      ctx.moveTo(curX2 + 0.5, 0.5);
+      ctx.lineTo(curX2 + 0.5, canvas.height + 0.5);
+      ctx.stroke();
+    }
+
+    // draw all vertical lines
+    const startY = (((topLeft[1] * gridSize) % gridSize) + gridSize) % gridSize;
+    for (let curY = 0; curY <= canvas.height; curY += gridSize) {
+      const curY2 = Math.ceil(curY + startY);
+      ctx.beginPath();
+      ctx.moveTo(0.5, curY2 + 0.5);
+      ctx.lineTo(canvas.width + 0.5, curY2 + 0.5);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    drawTradeRoutes(canvas, ctx);
+    return canvas;
   }
 
-  private drawTradeRoutes(
-    game: Game,
+  function drawTradeRoutes(
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D
   ) {
@@ -291,8 +309,8 @@ class Map extends React.PureComponent<MapProps> {
         }
         drawn.set(edge, true);
 
-        const [ux, uy] = this.toVpCoor(galaxy.getCoor(u));
-        const [vx, vy] = this.toVpCoor(galaxy.getCoor(v));
+        const [ux, uy] = toVpCoor(galaxy.getCoor(u));
+        const [vx, vy] = toVpCoor(galaxy.getCoor(v));
         ctx.beginPath();
         ctx.moveTo(ux, uy);
         ctx.lineTo(vx, vy);
@@ -304,100 +322,46 @@ class Map extends React.PureComponent<MapProps> {
     return canvas;
   }
 
-  private drawGrid(game: Game) {
-    const canvas = this.cachedGrid;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      throw new Error("cannot create context");
-    }
+  function panTo(vpFrom: [number, number], vpTo: [number, number]) {
+    setUpdateAnimation(undefined);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "#494949";
-
-    const gridSize = this.gridSize;
-
-    // draw all horizontal lines
-    const startX =
-      (((this.topLeft[0] * gridSize) % gridSize) + gridSize) % gridSize;
-    for (let curX = 0; curX <= canvas.width; curX += gridSize) {
-      const curX2 = Math.ceil(curX + startX);
-      ctx.beginPath();
-      ctx.moveTo(curX2 + 0.5, 0.5);
-      ctx.lineTo(curX2 + 0.5, canvas.height + 0.5);
-      ctx.stroke();
-    }
-
-    // draw all vertical lines
-    const startY =
-      (((this.topLeft[1] * gridSize) % gridSize) + gridSize) % gridSize;
-    for (let curY = 0; curY <= canvas.height; curY += gridSize) {
-      const curY2 = Math.ceil(curY + startY);
-      ctx.beginPath();
-      ctx.moveTo(0.5, curY2 + 0.5);
-      ctx.lineTo(canvas.width + 0.5, curY2 + 0.5);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-
-    this.drawTradeRoutes(game, canvas, ctx);
-    return canvas;
-  }
-
-  // helper function behind the event handlers
-  private panTo(game: Game, vpFrom: [number, number], vpTo: [number, number]) {
-    this.updateAnimation = undefined;
-
-    const from = this.toGameCoor(vpFrom);
-    const to = this.toGameCoor(vpTo);
+    const from = toGameCoor(vpFrom);
+    const to = toGameCoor(vpTo);
     const offset = subtract(from, to);
     let distance = norm(offset);
 
-    this.updateAnimation = () => {
+    setUpdateAnimation(() => {
       const speed = distance * 0.02;
       let final;
       if (speed === 0) {
         return; // no change
       }
 
-      if (speed < 0.01 / this.gridSize) {
-        this.updateAnimation = undefined;
+      if (speed < 0.01 / gridSize) {
+        setUpdateAnimation(undefined);
         final = distance;
       } else {
         final = speed;
         distance -= speed;
       }
       const proj = project(offset, final);
-      this.topLeft = add(this.topLeft, proj);
-    };
+      setTopLeft(add(topLeft, proj));
+    });
   }
 
-  private drawTriangle(ctx: CanvasRenderingContext2D) {
-    ctx.moveTo(0, 0);
-    ctx.lineTo(5, 20);
-    ctx.lineTo(-5, 20);
-    ctx.closePath();
+  function pan(e: HammerInput) {
+    const vpCenter = getVpCenter();
+    panTo(vpCenter, add(vpCenter, [e.deltaX, e.deltaY]));
   }
 
-  private pan(game: Game, e: HammerInput) {
-    this.panTo(
-      game,
-      this.getVpCenter(),
-      add(this.getVpCenter(), [e.deltaX, e.deltaY])
-    );
-  }
-
-  private click(game: Game, e: HammerInput) {
+  function click(e: HammerInput) {
     const galaxy = game.getReader();
     const bb = e.target.getBoundingClientRect();
     const coor = [e.center.x - bb.left, e.center.y - bb.top] as [
       number,
       number
     ];
-    const gameCoor = this.toGameCoor(coor);
+    const gameCoor = toGameCoor(coor);
 
     const nearbyObjs = galaxy.searchNearbyObjs(gameCoor, RADIUS).toArray();
     switch (nearbyObjs.length) {
@@ -407,96 +371,120 @@ class Map extends React.PureComponent<MapProps> {
         const obj = nearbyObjs[0];
         switch (obj.kind) {
           case MapDataKind.Fleet:
-            this.props.addFleetPanel(obj as FleetModel);
+            setCurrentView({ kind: ViewKind.Fleet, fleet: obj as FleetModel });
             break;
           case MapDataKind.Planet:
-            this.props.addPlanetPanel(obj as PlanetModel);
+            setCurrentView({
+              kind: ViewKind.Planet,
+              planet: obj as PlanetModel,
+            });
             break;
           case MapDataKind.RouteSegment:
-            this.props.addRoutePanel(obj as IRouteSegment);
+            setCurrentView({
+              kind: ViewKind.Route,
+              route: obj as IRouteSegment,
+            });
             break;
         }
         break;
       }
       default: {
-        this.props.addSelector(nearbyObjs);
+        setCurrentView({ kind: ViewKind.Selector, objs: nearbyObjs });
         break;
       }
     }
   }
 
-  private dblclick(game: Game, e: HammerInput) {
+  function dblclick(e: HammerInput) {
     const bb = e.target.getBoundingClientRect();
     const coor = [e.center.x - bb.left, e.center.y - bb.top] as [
       number,
       number
     ];
-    this.panTo(game, this.getVpCenter(), coor);
+    panTo(getVpCenter(), coor);
   }
 
-  private wheel(game: Game, e: WheelEvent | HammerInput) {
-    this.updateAnimation = undefined;
+  function wheel(e: WheelEvent | HammerInput) {
+    setUpdateAnimation(undefined);
 
     const isZoomingIn = e.deltaY < 0;
-    const centerCoor = this.getCenter();
+    const centerCoor = getCenter();
     let zoomSpeed = 10;
-    this.updateAnimation = () => {
+    setUpdateAnimation(() => {
       if (isZoomingIn) {
-        this.gridSize = Math.min(MAX_GRID_SIZE, this.gridSize + zoomSpeed);
+        setGridSize(Math.min(MAX_GRID_SIZE, gridSize + zoomSpeed));
       } else {
-        this.gridSize = Math.max(MIN_GRID_SIZE, this.gridSize - zoomSpeed);
+        setGridSize(Math.max(MIN_GRID_SIZE, gridSize - zoomSpeed));
       }
-      this.topLeft = this.centerVp(this.toVpCoor(centerCoor));
+      setTopLeft(centerVp(toVpCoor(centerCoor)));
 
-      if (this.updateAnimation !== undefined) {
+      if (updateAnimation !== undefined) {
         zoomSpeed /= 1.1;
         if (zoomSpeed < 1) {
-          this.updateAnimation = undefined;
+          setUpdateAnimation(undefined);
         }
       }
-    };
+    });
   }
 
-  private centerVp(vpAt: [number, number]) {
-    const at = this.toGameCoor(vpAt);
-    const offset = subtract(this.getCenter(), at);
-    return add(this.topLeft, offset);
+  function centerVp(vpAt: [number, number]) {
+    const at = toGameCoor(vpAt);
+    const offset = subtract(getCenter(), at);
+    return add(topLeft, offset);
   }
 
-  private toVpCoor([x, y]: [number, number]): [number, number] {
-    const [tlX, tlY] = this.topLeft;
-    return [(x + tlX) * this.gridSize, (y + tlY) * this.gridSize];
+  function toVpCoor([x, y]: [number, number]): Vec2D {
+    const [tlX, tlY] = topLeft;
+    return [(x + tlX) * gridSize, (y + tlY) * gridSize];
   }
 
-  private toGameCoor([x, y]: [number, number]): [number, number] {
-    const [tlX, tlY] = this.topLeft;
-    return [x / this.gridSize - tlX, y / this.gridSize - tlY];
+  function toGameCoor([x, y]: [number, number]): Vec2D {
+    const [tlX, tlY] = topLeft;
+    return [x / gridSize - tlX, y / gridSize - tlY];
   }
 
-  private getVpCenter(): [number, number] {
-    const canvas = this.canvasRef.current;
-    if (!canvas) {
-      throw new Error("bug: canvas is not ready");
-    }
+  function getVpCenter(): Vec2D {
+    const canvas = getMapCanvas();
     return [canvas.width / 2, canvas.height / 2];
   }
 
-  private getCenter(): [number, number] {
-    return this.toGameCoor(this.getVpCenter());
+  function getCenter() {
+    return toGameCoor(getVpCenter());
   }
+};
+
+function createBlankCanvas(): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("cannot create context");
+  }
+  return [canvas, context];
 }
 
-const dispatchers = (
-  dispatch: Dispatch<ClosableAction>
-): IMapDispatchProps => ({
-  addFleetPanel: (fleet: FleetModel) =>
-    dispatch(addClosable(ClosablePanelType.Fleet, fleet)),
-  addPlanetPanel: (planet: PlanetModel) =>
-    dispatch(addClosable(ClosablePanelType.Planet, planet)),
-  addRoutePanel: (route: IRouteSegment) =>
-    dispatch(addClosable(ClosablePanelType.Route, route)),
-  addSelector: (objs: IMapData[]) =>
-    dispatch(addClosable(ClosablePanelType.Selector, objs)),
-});
+function drawCircle(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number
+) {
+  ctx.arc(x, y, r, 0, 2 * Math.PI);
+}
 
-export default connect(undefined, dispatchers)(Map);
+function drawTriangle(ctx: CanvasRenderingContext2D) {
+  ctx.moveTo(0, 0);
+  ctx.lineTo(5, 20);
+  ctx.lineTo(-5, 20);
+  ctx.closePath();
+}
+
+// Ref hooks doesn't work since the reference needs to last outside of rendering
+function getMapCanvas() {
+  const canvas = document.getElementsByTagName("canvas").namedItem("map");
+  if (!canvas) {
+    throw new Error("map canvas not setup properly");
+  }
+  return canvas;
+}
+
+export default Map;

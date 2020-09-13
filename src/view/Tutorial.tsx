@@ -1,14 +1,17 @@
 import * as React from "react";
 import { Product } from "../model/product";
-import ContentPanel from "./ContentPanel";
-import { BASIC_GOODS, LUXURY_GOODS } from "./productConstants";
-import TitleBar from "./TitleBar";
-import Window from "./Window";
+import Window from "../components/Window";
+import ContentPanel from "../components/ContentPanel";
+import TitleBar from "../components/TitleBar";
+import { BaseViewProps } from "./constants/view";
+import { BASIC_GOODS, LUXURY_GOODS } from "./constants/product";
 
-const Tutorial: React.FC = () => {
+type TutorialProps = BaseViewProps;
+
+const Tutorial: React.FC<TutorialProps> = ({ viewId: id }) => {
   return (
     <Window>
-      <TitleBar title="Tutorial" />
+      <TitleBar viewId={id} title="Tutorial" />
       <ContentPanel>
         <h2>Getting Started</h2>
         <p>
