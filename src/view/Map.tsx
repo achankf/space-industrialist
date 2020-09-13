@@ -2,6 +2,7 @@ import * as Hammer from "hammerjs";
 import * as Immutable from "immutable";
 import { SortedTrie, add, norm, project, subtract, Vec2D } from "myalgo-ts";
 import React, { useContext, useEffect, useState } from "react";
+import styled from "styled-components";
 import { GameContext } from "../contexts/GameContext";
 import { ViewContext } from "../contexts/ViewContext";
 import { CoorT, IRouteSegment, MapDataKind } from "../model";
@@ -114,7 +115,7 @@ const Map: React.FC = () => {
     draw();
   }, [isNewAnimationFrame]);
 
-  return <canvas id="map" />;
+  return <Canvas id="map" />;
 
   // end of component
   // below are helper functions for drawing the map
@@ -356,11 +357,9 @@ const Map: React.FC = () => {
 
   function click(e: HammerInput) {
     const galaxy = game.getReader();
+    e.target;
     const bb = e.target.getBoundingClientRect();
-    const coor = [e.center.x - bb.left, e.center.y - bb.top] as [
-      number,
-      number
-    ];
+    const coor: [number, number] = [e.center.x - bb.left, e.center.y - bb.top];
     const gameCoor = toGameCoor(coor);
 
     const nearbyObjs = galaxy.searchNearbyObjs(gameCoor, RADIUS).toArray();
@@ -486,5 +485,12 @@ function getMapCanvas() {
   }
   return canvas;
 }
+
+const Canvas = styled.canvas`
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  height: 100%;
+`;
 
 export default Map;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useContext } from "react";
+import styled from "styled-components";
 import { GameContext } from "./contexts/GameContext";
 import { SpeedContext } from "./contexts/SpeedContext";
 import Map from "./view/Map";
@@ -32,12 +33,20 @@ const App: React.FC = () => {
   }, [shouldEndTurn]);
 
   return (
-    <React.Fragment>
-      <Menu />
-      <Map />
+    <>
+      <Container>
+        <Map />
+        <Menu />
+      </Container>
       <Views />
-    </React.Fragment>
+    </>
   );
 };
+
+const Container = styled.div`
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+`;
 
 export default App;

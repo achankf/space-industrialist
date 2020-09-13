@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { ViewContext } from "../contexts/ViewContext";
-import Bug from "../utils/UnreachableError";
+import UnreachableError from "../utils/UnreachableError";
 import Planet from "./Planet";
 import { ViewKind } from "./constants/view";
 import Fleet from "./Fleet";
@@ -37,7 +37,7 @@ const Views: React.FC = () => {
     case ViewKind.Tutorial:
       return <Tutorial viewId={viewId} />;
     default:
-      throw new Bug();
+      throw new UnreachableError();
   }
 };
 

@@ -39,7 +39,7 @@ const ColonyDetails: React.FC<ColonyDetailsProps> = ({
   const powerUsageEff = galaxy.getPowerUsageEff(colony) * 100;
 
   return (
-    <React.Fragment>
+    <>
       <Population num={population} max={maxPop} />
       <GrowthRate growthRate={growthRate} />
       <EncourageGrowth colony={colony} />
@@ -66,7 +66,7 @@ const ColonyDetails: React.FC<ColonyDetailsProps> = ({
           />
         </td>
       </tr>
-    </React.Fragment>
+    </>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { createRef, useContext, useState } from "react";
+import React, { createRef, useContext, useEffect, useState } from "react";
 import LZString from "lz-string";
 import { Game, ISaveData } from "../game";
 import Window from "../components/Window";
@@ -40,8 +40,13 @@ export type ImportExportProps = BaseViewProps;
 const ImportExport: React.FC<ImportExportProps> = ({ viewId: id }) => {
   const { game } = useContext(GameContext);
   const { setCurrentView } = useContext(ViewContext);
-  const [saveData, setSaveData] = useState(toSave(game));
+  const [saveData, setSaveData] = useState("");
   const textareaRef = createRef<HTMLTextAreaElement>();
+
+  useEffect(() => {
+    // this is expensive, so initialize save data here instead of running toSave at every render
+    setSaveData(toSave(game));
+  }, []);
 
   function copySave() {
     textareaRef.current?.select();

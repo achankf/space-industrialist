@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import styled from "styled-components";
 import assert from "../utils/assert";
 import { GameContext } from "../contexts/GameContext";
 import { IMapData, IRouteSegment, MapDataKind } from "../model";
@@ -70,14 +71,9 @@ const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
 
     const { label, color, click } = uiData;
     return (
-      <div
-        className="selectLabel"
-        key={label}
-        style={{ color }}
-        onClick={click}
-      >
+      <SelectLabel key={label} color={color} onClick={click}>
         {label}
-      </div>
+      </SelectLabel>
     );
   });
 
@@ -88,5 +84,9 @@ const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
     </Window>
   );
 };
+
+const SelectLabel = styled.div.attrs(() => ({ className: "button" }))`
+  color: ${(props) => props.color};
+`;
 
 export default Selector;

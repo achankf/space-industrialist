@@ -5,6 +5,7 @@ import ContentPanel from "../../components/ContentPanel";
 import TitleBar from "../../components/TitleBar";
 import Window from "../../components/Window";
 import { BaseViewProps } from "../constants/view";
+import Nav, { NavButtonProps } from "../../components/Nav";
 import { SubViewKind } from "./constants";
 import SubView from "./SubView";
 
@@ -17,14 +18,16 @@ type FleetProps = BaseFleetProps & BaseViewProps;
 const Fleet: React.FC<FleetProps> = ({ viewId, fleet }) => {
   const [subViewKind, setSubViewKind] = useState(SubViewKind.Route);
 
+  const navButtons: NavButtonProps[] = [
+    { label: "Route", onClick: () => setSubViewKind(SubViewKind.Route) },
+    { label: "Cargo", onClick: () => setSubViewKind(SubViewKind.Cargo) },
+  ];
+
   return (
     <Window>
       <TitleBar viewId={viewId} title={`Trader ${fleet.id}`} />
+      <Nav buttons={navButtons} />
       <ContentPanel>
-        <nav className="tabs">
-          <div onClick={() => setSubViewKind(SubViewKind.Route)}>Route</div>
-          <div onClick={() => setSubViewKind(SubViewKind.Cargo)}>Cargo</div>
-        </nav>
         <SubView viewId={viewId} kind={subViewKind} fleet={fleet} />
       </ContentPanel>
     </Window>

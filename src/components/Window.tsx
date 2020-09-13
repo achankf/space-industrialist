@@ -1,7 +1,11 @@
-import * as React from "react";
+import styled from "styled-components";
 
-const Window: React.FC = (props) => {
-  return <div className="panel">{props.children}</div>;
-};
-
-export default Window;
+export default styled.div`
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(0);
+  background-color: rgba(85, 85, 85, 0.9);
+  border: 1px solid rgb(46, 46, 46);
+`;
