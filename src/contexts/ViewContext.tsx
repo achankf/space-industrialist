@@ -4,7 +4,7 @@ import { AllBaseViewProps, ViewProps } from "../view/ViewProps";
 import { ViewKind } from "../view/constants/view";
 import assert from "../utils/assert";
 
-interface ViewContextType {
+export interface ViewContextType {
   currentView?: ViewProps;
   setCurrentView(props: AllBaseViewProps): void;
   closeView(id: symbol): void;
