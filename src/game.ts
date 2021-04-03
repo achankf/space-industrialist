@@ -1,5 +1,6 @@
 import Dexie from "dexie";
 import * as Immutable from "immutable";
+
 import { CoorT, ILocatable, IRouteSegment, MapDataKind } from "./model";
 import { Colony } from "./model/colony";
 import { Fleet } from "./model/fleet";

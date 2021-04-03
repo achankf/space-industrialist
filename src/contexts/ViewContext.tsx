@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import noOp from "../utils/noOp";
-import { AllBaseViewProps, ViewProps } from "../view/ViewProps";
-import { ViewKind } from "../view/constants/view";
+
 import assert from "../utils/assert";
+import noOp from "../utils/noOp";
+import { ViewKind } from "../view/constants/view";
+import { AllBaseViewProps, ViewProps } from "../view/ViewProps";
 
 export interface ViewContextType {
   currentView?: ViewProps;

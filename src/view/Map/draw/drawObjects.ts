@@ -1,13 +1,14 @@
 import * as Immutable from "immutable";
+
 import { GalaxyReadProxy } from "../../../game";
 import { CoorT, MapDataKind } from "../../../model";
-import { Product, RawMaterial } from "../../../model/product";
-import { RADIUS } from "../constants";
-import CoorCalculator from "../CoorCalculator";
 import { Fleet as FleetModel } from "../../../model/fleet";
 import { Planet as PlanetModel } from "../../../model/planet";
-import { MapUIState } from "../reducer/state";
+import { Product, RawMaterial } from "../../../model/product";
 import assert from "../../../utils/assert";
+import { RADIUS } from "../constants";
+import CoorCalculator from "../CoorCalculator";
+import { MapUIState } from "../reducer/state";
 
 export default function drawObjects(
   galaxy: GalaxyReadProxy,

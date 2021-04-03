@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+
 import { GameContext } from "../../../contexts/GameContext";
 import { Colony } from "../../../model/colony";
 import EncourageGrowth from "./EncourageGrowth";

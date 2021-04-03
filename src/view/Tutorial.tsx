@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Product } from "../model/product";
-import Window from "../components/Window";
+
 import ContentPanel from "../components/ContentPanel";
 import TitleBar from "../components/TitleBar";
-import { BaseViewProps } from "./constants/view";
+import Window from "../components/Window";
+import { Product } from "../model/product";
 import { BASIC_GOODS, LUXURY_GOODS } from "./constants/product";
+import { BaseViewProps } from "./constants/view";
 
 type TutorialProps = BaseViewProps;
 

@@ -1,6 +1,7 @@
 import { Reducer } from "react";
+
 import Bug from "../../../utils/UnreachableError";
-import { AnimationAction, ActionKind } from "./action";
+import { ActionKind, AnimationAction } from "./action";
 import panReducer from "./panReducer";
 import { MapUIState } from "./state";
 import zoomReducer from "./zoomReducer";

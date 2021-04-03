@@ -1,11 +1,12 @@
 import * as Immutable from "immutable";
 import { equal, subtract, sum } from "myalgo-ts";
+
 import assert from "../utils/assert";
+import { FleetState, ILocatable, MapDataKind } from ".";
 import { Colony } from "./colony";
 import { Galaxy } from "./galaxy";
 import { Inventory } from "./inventory";
 import { allProducts, NUM_PRODUCTS, Product } from "./product";
-import { FleetState, ILocatable, MapDataKind } from ".";
 
 const PI_OVER_2 = Math.PI / 2;
 const SPEED = 0.3;

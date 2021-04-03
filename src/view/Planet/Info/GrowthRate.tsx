@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { BASIC_GOODS, LUXURY_GOODS } from "../../constants/product";
 
 interface GrowthRateProps {

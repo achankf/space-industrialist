@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useContext } from "react";
 import styled from "styled-components";
+
 import { GameContext } from "./contexts/GameContext";
 import { SpeedContext } from "./contexts/SpeedContext";
 import Map from "./view/Map";
@@ -47,6 +48,7 @@ const Container = styled.div`
   display: grid;
   grid-template-rows: auto 1fr;
   height: 100vh;
+  overflow: hidden;
 `;
 
 export default App;

@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { POWER_PLANT_COST } from "../../../model";
 
 interface ExpandButtonProps {

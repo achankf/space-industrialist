@@ -1,12 +1,11 @@
 env:
   browser: true
-  es2020: true
+  es2021: true
   node: true
 extends:
   - "eslint:recommended"
   - "plugin:react/recommended"
   - "plugin:@typescript-eslint/recommended"
-  - "prettier/@typescript-eslint"
   - "plugin:prettier/recommended"
 parser: "@typescript-eslint/parser"
 parserOptions:
@@ -17,11 +16,13 @@ parserOptions:
 plugins:
   - react
   - "@typescript-eslint"
-  - import
-ignorePatterns:
-  - registerServiceWorker.ts
-  - "*.js"
-rules: { "react/prop-types": "off", "import/order": "error" }
+  - simple-import-sort
+rules:
+  {
+    "react/prop-types": "off",
+    "simple-import-sort/exports": "error",
+    "simple-import-sort/imports": "error",
+  }
 settings:
   react:
     version: "detect"

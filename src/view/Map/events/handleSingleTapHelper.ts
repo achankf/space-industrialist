@@ -1,12 +1,13 @@
 import { Vec2D } from "myalgo-ts";
+
+import { ViewContextType } from "../../../contexts/ViewContext";
 import { GalaxyReadProxy } from "../../../game";
+import { IRouteSegment, MapDataKind } from "../../../model";
+import { Fleet as FleetModel } from "../../../model/fleet";
+import { Planet as PlanetModel } from "../../../model/planet";
 import { ViewKind } from "../../constants/view";
 import { RADIUS } from "../constants";
 import CoorCalculator from "../CoorCalculator";
-import { Planet as PlanetModel } from "../../../model/planet";
-import { IRouteSegment, MapDataKind } from "../../../model";
-import { Fleet as FleetModel } from "../../../model/fleet";
-import { ViewContextType } from "../../../contexts/ViewContext";
 import { MapUIState } from "../reducer/state";
 
 export default function (

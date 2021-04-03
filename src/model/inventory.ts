@@ -1,5 +1,6 @@
 import * as Immutable from "immutable";
 import { sum } from "myalgo-ts";
+
 import assert from "../utils/assert";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";

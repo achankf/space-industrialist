@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Fleet } from "../../model/fleet";
 import Bug from "../../utils/UnreachableError";
 import Cargo from "./Cargo";

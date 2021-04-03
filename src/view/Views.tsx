@@ -1,10 +1,11 @@
 import React, { useContext } from "react";
+
 import { ViewContext } from "../contexts/ViewContext";
 import UnreachableError from "../utils/UnreachableError";
-import Planet from "./Planet";
 import { ViewKind } from "./constants/view";
 import Fleet from "./Fleet";
 import ImportExport from "./ImportExport";
+import Planet from "./Planet";
 import Route from "./Route";
 import Selector from "./Selector";
 import Tutorial from "./Tutorial";

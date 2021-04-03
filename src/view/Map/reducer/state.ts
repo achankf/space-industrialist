@@ -1,4 +1,5 @@
 import { Vec2D } from "myalgo-ts";
+
 import { MIN_GRID_SIZE } from "../constants";
 import { AnimationAction } from "./action";
 

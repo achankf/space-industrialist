@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+
 import { GameContext } from "../../../contexts/GameContext";
 import { Industry } from "../../../model/industry";
 import { Product } from "../../../model/product";

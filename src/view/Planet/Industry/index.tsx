@@ -1,19 +1,20 @@
-import React, { useContext } from "react";
 import * as Immutable from "immutable";
 import { toIt } from "myalgo-ts";
+import React, { useContext } from "react";
+
 import { GameContext } from "../../../contexts/GameContext";
-import getOrThrow from "../../../utils/getOrThrow";
+import { Colony } from "../../../model/colony";
+import { Industry as IndustryModel } from "../../../model/industry";
 import {
+  allProducts,
   DEMAND_PRODUCTS,
   Product,
   RAW_MATERIALS,
   RAW_MATERIALS_SET,
   RawMaterial,
   SECONDARY_PRODUCTS,
-  allProducts,
 } from "../../../model/product";
-import { Colony } from "../../../model/colony";
-import { Industry as IndustryModel } from "../../../model/industry";
+import getOrThrow from "../../../utils/getOrThrow";
 import BuildButton from "./BuildButton";
 import ControlButtons from "./ControlButtons";
 import IndustryDetails from "./IndustryDetails";

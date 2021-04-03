@@ -1,4 +1,5 @@
 import { norm, subtract, Vec2D } from "myalgo-ts";
+
 import CoorCalculator from "../CoorCalculator";
 
 export enum ActionKind {

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Planet } from "../../model/planet";
+
 import ContentPanel from "../../components/ContentPanel";
+import Nav, { NavButtonProps } from "../../components/Nav";
 import TitleBar from "../../components/TitleBar";
 import Window from "../../components/Window";
+import { Planet } from "../../model/planet";
 import { BaseViewProps } from "../constants/view";
-import Nav, { NavButtonProps } from "../../components/Nav";
-import SubView from "./SubView";
 import { SubViewKind } from "./constants";
+import SubView from "./SubView";
 
 export interface BasePlanetProps {
   planet: Planet;

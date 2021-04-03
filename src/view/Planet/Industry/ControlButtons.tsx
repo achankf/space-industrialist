@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+
 import { GameContext } from "../../../contexts/GameContext";
 import { INDUSTRY_COST, INDUSTRY_DEMOLISH_COST } from "../../../model";
 import { Colony } from "../../../model/colony";

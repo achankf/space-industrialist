@@ -1,14 +1,15 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
-import assert from "../utils/assert";
+
+import ContentPanel from "../components/ContentPanel";
+import TitleBar from "../components/TitleBar";
+import Window from "../components/Window";
 import { GameContext } from "../contexts/GameContext";
+import { ViewContext } from "../contexts/ViewContext";
 import { IMapData, IRouteSegment, MapDataKind } from "../model";
 import { Fleet as FleetModel } from "../model/fleet";
 import { Planet as PlanetModel } from "../model/planet";
-import Window from "../components/Window";
-import ContentPanel from "../components/ContentPanel";
-import TitleBar from "../components/TitleBar";
-import { ViewContext } from "../contexts/ViewContext";
+import assert from "../utils/assert";
 import Bug from "../utils/UnreachableError";
 import { BaseViewProps, ViewKind } from "./constants/view";
 import { routeString } from "./Route";

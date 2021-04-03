@@ -1,12 +1,13 @@
 import * as Immutable from "immutable";
 import { average, sum, toIt } from "myalgo-ts";
+
 import assert from "../utils/assert";
+import { YEAR_PER_TICK } from ".";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
 import { Inventory } from "./inventory";
 import { Planet } from "./planet";
 import { allProducts, NUM_PRODUCTS, Product } from "./product";
-import { YEAR_PER_TICK } from ".";
 
 const POWER_POTENTIAL = 200;
 const PRICE_EXP_LOW = 0.7;

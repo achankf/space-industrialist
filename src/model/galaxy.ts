@@ -16,15 +16,10 @@ import {
   Trie,
   uniq,
 } from "myalgo-ts";
-import getOrThrow from "../utils/getOrThrow";
+
 import assert from "../utils/assert";
+import getOrThrow from "../utils/getOrThrow";
 import Bug from "../utils/UnreachableError";
-import { Colony, IColony } from "./colony";
-import { Fleet, IFleet } from "./fleet";
-import { IIndustry, Industry } from "./industry";
-import { IInventory, Inventory } from "./inventory";
-import { IPlanet, Planet } from "./planet";
-import { allProducts, Product, RAW_MATERIALS } from "./product";
 import {
   ANNUAL_INTEREST,
   CoorT,
@@ -34,6 +29,12 @@ import {
   MapDataKind,
   YEAR_PER_TICK,
 } from ".";
+import { Colony, IColony } from "./colony";
+import { Fleet, IFleet } from "./fleet";
+import { IIndustry, Industry } from "./industry";
+import { IInventory, Inventory } from "./inventory";
+import { IPlanet, Planet } from "./planet";
+import { allProducts, Product, RAW_MATERIALS } from "./product";
 
 const BIG_TURN = 50;
 const STARTING_CAPITAL = 1000000;

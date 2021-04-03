@@ -1,4 +1,5 @@
 import styled from "styled-components";
+
 import MaterialIcon from "./MaterialIcon";
 
 export default styled(MaterialIcon)`

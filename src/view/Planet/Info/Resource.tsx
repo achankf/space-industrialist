@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { Product } from "../../../model/product";
 
 interface ResourceProps {

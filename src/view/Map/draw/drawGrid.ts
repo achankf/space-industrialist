@@ -1,4 +1,5 @@
 import { SortedTrie } from "myalgo-ts";
+
 import { GalaxyReadProxy } from "../../../game";
 import { Colony } from "../../../model/colony";
 import { colonyCmp } from "../../../model/galaxy";

@@ -1,8 +1,9 @@
 import * as Immutable from "immutable";
+
 import {
+  allProducts,
   Product,
   RAW_MATERIALS as RAW_MATERIALS_MODEL,
-  allProducts,
 } from "../../model/product";
 
 export const BASIC_GOODS = [

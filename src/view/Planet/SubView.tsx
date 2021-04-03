@@ -1,11 +1,12 @@
 import React from "react";
+
 import { Colony } from "../../model/colony";
 import { Planet } from "../../model/planet";
 import Bug from "../../utils/UnreachableError";
 import { SubViewKind } from "./constants";
+import Industry from "./Industry";
 import Info from "./Info";
 import Market from "./Market";
-import Industry from "./Industry";
 
 const SubView: React.FC<{
   kind: SubViewKind;

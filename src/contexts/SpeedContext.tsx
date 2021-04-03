@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import noOp from "../utils/noOp";
 
 const FREQUENCY_RATE = 20;

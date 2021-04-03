@@ -1,7 +1,7 @@
 import Bug from "../utils/UnreachableError";
+import { ILocatable, MapDataKind } from ".";
 import { Colony } from "./colony";
 import { RawMaterial } from "./product";
-import { ILocatable, MapDataKind } from ".";
 
 export interface IPlanet {
   id: number;

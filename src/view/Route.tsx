@@ -1,10 +1,11 @@
 import React, { useContext } from "react";
+
+import ContentPanel from "../components/ContentPanel";
+import TitleBar from "../components/TitleBar";
+import Window from "../components/Window";
 import { GameContext } from "../contexts/GameContext";
 import { Game } from "../game";
 import { IRouteSegment as RouteSegment } from "../model";
-import Window from "../components/Window";
-import ContentPanel from "../components/ContentPanel";
-import TitleBar from "../components/TitleBar";
 import assert from "../utils/assert";
 import { BaseViewProps } from "./constants/view";
 

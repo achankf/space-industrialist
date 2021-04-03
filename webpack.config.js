@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require("path");
-const CopyPlugin = require("copy-webpack-plugin");
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   entry: "./src/index.tsx",
-  devtool: 'source-map',
+  devtool: "source-map",
   devServer: {
-    contentBase: './dist',
+    contentBase: "./dist",
+    hot: true,
+    inline: true,
   },
   module: {
     rules: [
@@ -28,13 +29,8 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    /*
-    new CopyPlugin({
-      patterns: [{ from: "./public", to: "./" }],
-    }),
-    */
     new HtmlWebpackPlugin({
-      template: "./templates/index.html"
+      template: "./templates/index.html",
     }),
   ],
 };

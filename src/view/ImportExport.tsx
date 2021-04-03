@@ -1,10 +1,11 @@
-import React, { createRef, useContext, useState } from "react";
 import LZString from "lz-string";
-import { Game, ISaveData } from "../game";
+import React, { createRef, useContext, useState } from "react";
+
+import TitleBar from "../components/TitleBar";
 import Window from "../components/Window";
 import { GameContext } from "../contexts/GameContext";
-import TitleBar from "../components/TitleBar";
 import { ViewContext } from "../contexts/ViewContext";
+import { Game, ISaveData } from "../game";
 import { BaseViewProps, ViewKind } from "./constants/view";
 
 function toSave(game: Game) {

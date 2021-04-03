@@ -1,4 +1,5 @@
 import * as Immutable from "immutable";
+
 import assert from "../utils/assert";
 import { Colony } from "./colony";
 import { Galaxy } from "./galaxy";

@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useReducer } from "react";
 import styled from "styled-components";
+
 import { GameContext } from "../../contexts/GameContext";
 import { ViewContext } from "../../contexts/ViewContext";
 import { getMapCanvas, MAP_CANVAS_ID } from "./constants";
@@ -78,8 +79,7 @@ const Map: React.FC = () => {
 
   const resize = () => {
     const canvas = getMapCanvas();
-    const width = document.body.clientWidth;
-    const height = document.body.clientHeight;
+    const { width, height } = canvas.getBoundingClientRect();
     canvas.width = width;
     canvas.height = height;
     const cachedGrid = cachedGridRef.current;

@@ -1,4 +1,5 @@
 import { Reducer } from "react";
+
 import { MAX_GRID_SIZE, MIN_GRID_SIZE } from "../constants";
 import CoorCalculator from "../CoorCalculator";
 import { ZoomAction } from "./action";
