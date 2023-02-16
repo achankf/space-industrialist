@@ -4,7 +4,10 @@ import { Reducer } from "react";
 import { PanAction } from "./action";
 import { MapUIState } from "./state";
 
-const panReducer: Reducer<MapUIState, PanAction> = (prevState, action) => {
+export const panReducer: Reducer<MapUIState, PanAction> = (
+  prevState,
+  action
+) => {
   const { gridSize, topLeft } = prevState;
   const { distance, offset } = action;
   const speed = distance * 0.02;
@@ -27,5 +30,3 @@ const panReducer: Reducer<MapUIState, PanAction> = (prevState, action) => {
     animationAction: nextAction,
   };
 };
-
-export default panReducer;

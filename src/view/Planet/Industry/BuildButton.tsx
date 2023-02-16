@@ -10,7 +10,10 @@ interface BuildButtonProps {
   product: Product;
 }
 
-const BuildButton: React.FC<BuildButtonProps> = ({ colony, product }) => {
+export const BuildButton: React.FC<BuildButtonProps> = ({
+  colony,
+  product,
+}) => {
   const { game } = useContext(GameContext);
   const buildIndustry = (e: React.MouseEvent<HTMLButtonElement>) => {
     const isOk =
@@ -27,5 +30,3 @@ const BuildButton: React.FC<BuildButtonProps> = ({ colony, product }) => {
 
   return <button onClick={buildIndustry}>+ Build</button>;
 };
-
-export default BuildButton;

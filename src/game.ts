@@ -1,5 +1,4 @@
 import Dexie from "dexie";
-import * as Immutable from "immutable";
 
 import { CoorT, ILocatable, IRouteSegment, MapDataKind } from "./model";
 import { Colony } from "./model/colony";
@@ -8,7 +7,7 @@ import { Galaxy, IGalaxySaveData } from "./model/galaxy";
 import { Industry } from "./model/industry";
 import { Planet } from "./model/planet";
 import { Product } from "./model/product";
-import Bug from "./utils/UnreachableError";
+import { UnreachableError } from "./utils/UnreachableError";
 export interface ISaveData {
   galaxySave: IGalaxySaveData;
 }
@@ -122,7 +121,7 @@ export class GalaxyReadProxy {
     at: CoorT,
     radius = 0,
     minDistance = 0
-  ): Immutable.Set<ILocatable | IRouteSegment> {
+  ): Set<ILocatable | IRouteSegment> {
     return this.galaxy.searchNearbyObjs(at, radius, minDistance);
   }
 
@@ -158,9 +157,7 @@ export class GalaxyReadProxy {
     return colony.growthRate(this.galaxy);
   }
 
-  public getTotalPowerUsage(
-    colony: Colony
-  ): {
+  public getTotalPowerUsage(colony: Colony): {
     industrialUsage: number;
     traderUsage: number;
     civUsage: number;
@@ -204,7 +201,7 @@ export class GalaxyReadProxy {
   public getPlanet(at: CoorT): Planet {
     const ret = this.tryGetPlanet(at);
     if (!ret) {
-      throw new Bug("cannot find planet");
+      throw new UnreachableError("cannot find planet");
     }
     return ret;
   }
@@ -259,7 +256,7 @@ export class GalaxyWriteProxy {
 
   public set onChange(handler: () => void) {
     if (this.onChangeHandler) {
-      throw new Bug("onChangeHandler should only be set once");
+      throw new UnreachableError("onChangeHandler should only be set once");
     }
     this.onChangeHandler = handler;
   }

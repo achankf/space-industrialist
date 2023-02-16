@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Game } from "../game";
-import noOp from "../utils/noOp";
+import { noOp } from "../utils/noOp";
 
 /**
  * There's no setter since game will be mutated in-place, however,
@@ -21,6 +21,7 @@ export const GameContext = React.createContext<GameContextType>({
 
 interface ContextProviderProps {
   game: Game;
+  children: React.ReactNode;
 }
 
 export const GameContextProvider: React.FC<ContextProviderProps> = ({

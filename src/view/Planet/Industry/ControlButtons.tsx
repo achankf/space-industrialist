@@ -10,7 +10,7 @@ interface ControlButtonsProps {
   industry: Industry;
 }
 
-const ControlButtons: React.FC<ControlButtonsProps> = ({
+export const ControlButtons: React.FC<ControlButtonsProps> = ({
   colony,
   industry,
 }) => {
@@ -96,5 +96,3 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     </div>
   );
 };
-
-export default ControlButtons;

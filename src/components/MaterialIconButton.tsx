@@ -1,8 +1,8 @@
 import styled from "styled-components";
 
-import MaterialIcon from "./MaterialIcon";
+import { MaterialIcon } from "./MaterialIcon";
 
-export default styled(MaterialIcon)`
+export const MaterialIconButton = styled(MaterialIcon)`
   cursor: pointer;
 
   :hover {

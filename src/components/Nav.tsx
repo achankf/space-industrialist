@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-import assert from "../utils/assert";
+import { assert } from "../utils/assert";
 
 export interface NavButtonProps {
   label: string;
@@ -12,7 +12,7 @@ interface NavProps {
   buttons: NavButtonProps[];
 }
 
-const Nav: React.FC<NavProps> = ({ buttons }) => {
+export const Nav: React.FC<NavProps> = ({ buttons }) => {
   assert(buttons.length > 0);
 
   return (
@@ -35,5 +35,3 @@ const NavButton = styled.div.attrs<NavButtonProps>({ className: "button" })`
   padding: 0.125rem 0.3125rem;
   border: 1px solid black;
 `;
-
-export default Nav;

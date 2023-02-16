@@ -3,10 +3,10 @@ import { SortedTrie } from "myalgo-ts";
 import { GalaxyReadProxy } from "../../../game";
 import { Colony } from "../../../model/colony";
 import { colonyCmp } from "../../../model/galaxy";
-import CoorCalculator from "../CoorCalculator";
+import { CoorCalculator } from "../CoorCalculator";
 import { MapUIState } from "../reducer/state";
 
-export default function drawGrid(
+export function drawGrid(
   canvas: HTMLCanvasElement,
   galaxy: GalaxyReadProxy,
   state: MapUIState

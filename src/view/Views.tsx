@@ -1,16 +1,16 @@
 import React, { useContext } from "react";
 
 import { ViewContext } from "../contexts/ViewContext";
-import UnreachableError from "../utils/UnreachableError";
+import { UnreachableError } from "../utils/UnreachableError";
 import { ViewKind } from "./constants/view";
-import Fleet from "./Fleet";
-import ImportExport from "./ImportExport";
-import Planet from "./Planet";
-import Route from "./Route";
-import Selector from "./Selector";
-import Tutorial from "./Tutorial";
+import { Fleet } from "./Fleet";
+import { ImportExport } from "./ImportExport";
+import { PlanetView } from "./Planet";
+import { Route } from "./Route";
+import { Selector } from "./Selector";
+import { Tutorial } from "./Tutorial";
 
-const Views: React.FC = () => {
+export const Views: React.FC = () => {
   const { currentView: props } = useContext(ViewContext);
   if (!props) {
     return null;
@@ -25,7 +25,7 @@ const Views: React.FC = () => {
     }
     case ViewKind.Planet: {
       const { planet } = props;
-      return <Planet viewId={viewId} planet={planet} />;
+      return <PlanetView viewId={viewId} planet={planet} />;
     }
     case ViewKind.Route: {
       const { route } = props;
@@ -41,5 +41,3 @@ const Views: React.FC = () => {
       throw new UnreachableError();
   }
 };
-
-export default Views;

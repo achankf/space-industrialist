@@ -1,7 +1,6 @@
-import * as Immutable from "immutable";
 import { equal, subtract, sum } from "myalgo-ts";
 
-import assert from "../utils/assert";
+import { assert } from "../utils/assert";
 import { FleetState, ILocatable, MapDataKind } from ".";
 import { Colony } from "./colony";
 import { Galaxy } from "./galaxy";
@@ -183,17 +182,15 @@ export class Fleet implements ILocatable {
       return acc;
     }, new Array<number>(NUM_PRODUCTS).fill(0));
 
-    const goodsUnloaded = new Array<number>(NUM_PRODUCTS).fill(0);
+    const goodsUnloaded = this.cargo
+      .getAllQty()
+      .reduce((acc, [product, qty]) => {
+        // sell goods
+        const unloaded = stop.tryBuy(galaxy, this.cargo, product, qty, 0); // Market.basePrice(product));
+        acc[product] += unloaded;
 
-    // sell goods
-    for (const [product, qty] of this.cargo.getAllQty()) {
-      if (qty === 0) {
-        continue;
-      }
-
-      const unloaded = stop.tryBuy(galaxy, this.cargo, product, qty, 0); // Market.basePrice(product));
-      goodsUnloaded[product] += unloaded;
-    }
+        return acc;
+      }, new Array<number>(NUM_PRODUCTS).fill(0));
 
     if (this.isRetiring || !galaxy.hasTradeRoute(stop, next)) {
       // there's a better path than the fleet's path, so retire
@@ -240,7 +237,7 @@ export class Fleet implements ILocatable {
     // pick at most 3 types of goods to fill cargo, from highest demand to lowest demand
     const fillQty = this.cargo.getEmptySpace() / 3;
 
-    for (const product of Immutable.Seq(lowToHigh).reverse()) {
+    for (const product of lowToHigh.reverse()) {
       if (this.cargo.getEmptySpace() === 0) {
         break;
       }

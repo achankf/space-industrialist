@@ -1,7 +1,7 @@
 import * as Immutable from "immutable";
 import { sum } from "myalgo-ts";
 
-import assert from "../utils/assert";
+import { assert } from "../utils/assert";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
 import { NUM_PRODUCTS, Product } from "./product";
@@ -90,9 +90,7 @@ export class Inventory {
     for (const src of this.demandSrcs) {
       const prodCap = src.prodCap(galaxy);
 
-      const allDemands = Immutable.Seq(
-        Industry.getDemandProducts(src.productType)
-      )
+      const allDemands = Industry.getDemandProducts(src.productType)
         .map((x) => {
           return {
             neededKinds: x,
@@ -126,15 +124,8 @@ export class Inventory {
     return demands[product];
   }
 
-  public *getAllQty(): Generator<[Product, number], void, unknown> {
-    const it = this.inventory.map(
-      (qty, idx) => [idx, qty] as [Product, number]
-    );
-    for (const pair of it) {
-      // any entry must have qty >= 0
-      assert(pair[1] >= 0);
-      yield pair;
-    }
+  public getAllQty(): [Product, number][] {
+    return this.inventory.map((qty, idx) => [idx, qty]);
   }
 
   public consume(

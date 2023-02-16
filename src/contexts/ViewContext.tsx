@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-import assert from "../utils/assert";
-import noOp from "../utils/noOp";
+import { assert } from "../utils/assert";
+import { noOp } from "../utils/noOp";
 import { ViewKind } from "../view/constants/view";
 import { AllBaseViewProps, ViewProps } from "../view/ViewProps";
 
@@ -19,6 +19,7 @@ export const ViewContext = React.createContext<ViewContextType>({
 
 interface ContextProviderProps {
   isNewGame: boolean;
+  children: React.ReactNode;
 }
 
 export const ViewContextProvider: React.FC<ContextProviderProps> = ({

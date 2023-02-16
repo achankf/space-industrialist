@@ -13,15 +13,15 @@ import styled from "styled-components";
 import { GameContext } from "../../contexts/GameContext";
 import { ViewContext } from "../../contexts/ViewContext";
 import { getMapCanvas, MAP_CANVAS_ID } from "./constants";
-import CoorCalculator from "./CoorCalculator";
-import draw from "./draw/draw";
-import drawGrid from "./draw/drawGrid";
-import handleSingleTapHelper from "./events/handleSingleTapHelper";
+import { CoorCalculator } from "./CoorCalculator";
+import { draw } from "./draw/draw";
+import { drawGrid } from "./draw/drawGrid";
+import { handleSingleTapHelper } from "./events/handleSingleTapHelper";
 import { createPanAction, createZoomAction } from "./reducer/action";
-import reducer from "./reducer/reducer";
+import { reducer } from "./reducer/reducer";
 import { defaultState } from "./reducer/state";
 
-const Map: React.FC = () => {
+export const Map: React.FC = () => {
   const { game, gameUpdateFlag } = useContext(GameContext);
   const { setCurrentView } = useContext(ViewContext);
   const galaxy = game.getReader();
@@ -162,5 +162,3 @@ const Canvas = styled.canvas`
   width: 100%;
   height: 100%;
 `;
-
-export default Map;

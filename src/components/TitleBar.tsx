@@ -2,14 +2,14 @@ import React, { useContext } from "react";
 import styled from "styled-components";
 
 import { ViewContext } from "../contexts/ViewContext";
-import MaterialIconButton from "./MaterialIconButton";
+import { MaterialIconButton } from "./MaterialIconButton";
 
 interface TitleBarProps {
   viewId: symbol;
   title: string;
 }
 
-const TitleBar: React.FC<TitleBarProps> = ({ viewId, title }) => {
+export const TitleBar: React.FC<TitleBarProps> = ({ viewId, title }) => {
   const { closeView } = useContext(ViewContext);
 
   return (
@@ -34,5 +34,3 @@ const TitleBarContainer = styled.div`
   justify-content: space-between;
   padding: var(--default-padding-size);
 `;
-
-export default TitleBar;

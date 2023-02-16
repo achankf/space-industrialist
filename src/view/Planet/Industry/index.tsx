@@ -14,10 +14,10 @@ import {
   RawMaterial,
   SECONDARY_PRODUCTS,
 } from "../../../model/product";
-import getOrThrow from "../../../utils/getOrThrow";
-import BuildButton from "./BuildButton";
-import ControlButtons from "./ControlButtons";
-import IndustryDetails from "./IndustryDetails";
+import { getOrThrow } from "../../../utils/getOrThrow";
+import { BuildButton } from "./BuildButton";
+import { ControlButtons } from "./ControlButtons";
+import { IndustryDetails } from "./IndustryDetails";
 
 // hover text that shows up when hovering resource column
 const PRODUCT_HOVER_TEXT = Immutable.Map(
@@ -58,7 +58,7 @@ interface IndustryProps {
   colony: Colony;
 }
 
-const Industry: React.FC<IndustryProps> = ({ colony }) => {
+export const Industry: React.FC<IndustryProps> = ({ colony }) => {
   const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const industries = galaxy.getIndustries(colony) || new Set<IndustryModel>();
@@ -111,5 +111,3 @@ const Industry: React.FC<IndustryProps> = ({ colony }) => {
     </table>
   );
 };
-
-export default Industry;

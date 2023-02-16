@@ -1,16 +1,17 @@
 import * as Immutable from "immutable";
+import groupBy from "lodash/groupBy";
 
 import { GalaxyReadProxy } from "../../../game";
 import { CoorT, MapDataKind } from "../../../model";
 import { Fleet as FleetModel } from "../../../model/fleet";
 import { Planet as PlanetModel } from "../../../model/planet";
 import { Product, RawMaterial } from "../../../model/product";
-import assert from "../../../utils/assert";
+import { assert } from "../../../utils/assert";
 import { RADIUS } from "../constants";
-import CoorCalculator from "../CoorCalculator";
+import { CoorCalculator } from "../CoorCalculator";
 import { MapUIState } from "../reducer/state";
 
-export default function drawObjects(
+export function drawObjects(
   galaxy: GalaxyReadProxy,
   coorCalculator: CoorCalculator,
   state: MapUIState
@@ -20,10 +21,10 @@ export default function drawObjects(
   canvas.width = document.body.clientWidth;
   canvas.height = document.body.clientHeight;
 
-  const groups = Immutable.Seq(galaxy.getObjs()).groupBy(([x]) => x.kind);
+  const groups = groupBy([...galaxy.getObjs().entries()], ([{ kind }]) => kind);
 
   const drawFleets = () => {
-    const fleetGroup = groups.get(MapDataKind.Fleet);
+    const fleetGroup = groups[MapDataKind.Fleet];
     if (!fleetGroup) {
       return;
     }
@@ -50,7 +51,7 @@ export default function drawObjects(
   };
 
   const drawPlanets = () => {
-    const planetGroup = groups.get(MapDataKind.Planet);
+    const planetGroup = groups[MapDataKind.Planet];
     if (!planetGroup) {
       throw new Error("game generation should generate at least 1 planet");
     }

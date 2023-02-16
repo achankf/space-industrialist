@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export default styled.div`
+export const Window = styled.div`
   position: fixed;
   left: 50%;
   top: 50%;

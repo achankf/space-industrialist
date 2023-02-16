@@ -5,7 +5,7 @@ interface CoorProps {
   y: number;
 }
 
-const Coor: React.FC<CoorProps> = ({ x, y }) => {
+export const Coor: React.FC<CoorProps> = ({ x, y }) => {
   return (
     <tr title="This is the coordinates of the planet.">
       <td>Coor</td>
@@ -15,5 +15,3 @@ const Coor: React.FC<CoorProps> = ({ x, y }) => {
     </tr>
   );
 };
-
-export default Coor;

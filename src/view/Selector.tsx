@@ -1,16 +1,16 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import ContentPanel from "../components/ContentPanel";
-import TitleBar from "../components/TitleBar";
-import Window from "../components/Window";
+import { ContentPanel } from "../components/ContentPanel";
+import { TitleBar } from "../components/TitleBar";
+import { Window } from "../components/Window";
 import { GameContext } from "../contexts/GameContext";
 import { ViewContext } from "../contexts/ViewContext";
 import { IMapData, IRouteSegment, MapDataKind } from "../model";
 import { Fleet as FleetModel } from "../model/fleet";
 import { Planet as PlanetModel } from "../model/planet";
-import assert from "../utils/assert";
-import Bug from "../utils/UnreachableError";
+import { assert } from "../utils/assert";
+import { UnreachableError } from "../utils/UnreachableError";
 import { BaseViewProps, ViewKind } from "./constants/view";
 import { routeString } from "./Route";
 
@@ -20,7 +20,7 @@ export interface BaseSelectorProps {
 
 type SelectorProps = BaseSelectorProps & BaseViewProps;
 
-const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
+export const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
   assert(objs.length > 0);
 
   const { game } = useContext(GameContext);
@@ -67,7 +67,7 @@ const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
         }
         break;
       default:
-        throw new Bug();
+        throw new UnreachableError();
     }
 
     const { label, color, click } = uiData;
@@ -89,5 +89,3 @@ const Selector: React.FC<SelectorProps> = ({ viewId, objs }) => {
 const SelectLabel = styled.div.attrs(() => ({ className: "button" }))`
   color: ${(props) => props.color};
 `;
-
-export default Selector;

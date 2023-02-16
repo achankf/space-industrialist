@@ -2,29 +2,26 @@ import React, { useContext } from "react";
 
 import { GameContext } from "../../../contexts/GameContext";
 import { Colony } from "../../../model/colony";
-import EncourageGrowth from "./EncourageGrowth";
-import ExpandButton from "./ExpandButton";
-import GrowthRate from "./GrowthRate";
-import Population from "./Population";
-import PowerConsumer from "./PowerConsumer";
-import PowerProducer from "./PowerProducer";
+import { EncourageGrowth } from "./EncourageGrowth";
+import { ExpandButton } from "./ExpandButton";
+import { GrowthRate } from "./GrowthRate";
+import { Population } from "./Population";
+import { PowerConsumer } from "./PowerConsumer";
+import { PowerProducer } from "./PowerProducer";
 
 interface ColonyDetailsProps {
   colony: Colony;
   expandPowerPlant: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
-const ColonyDetails: React.FC<ColonyDetailsProps> = ({
+
+export const ColonyDetails: React.FC<ColonyDetailsProps> = ({
   colony,
   expandPowerPlant,
 }) => {
   const { game } = useContext(GameContext);
   const galaxy = game.getReader();
-  const {
-    industrialUsage,
-    traderUsage,
-    civUsage,
-    totalUsage,
-  } = galaxy.getTotalPowerUsage(colony);
+  const { industrialUsage, traderUsage, civUsage, totalUsage } =
+    galaxy.getTotalPowerUsage(colony);
 
   const population = colony.getPopulation();
   const maxPop = colony.getMaxPop();
@@ -38,6 +35,8 @@ const ColonyDetails: React.FC<ColonyDetailsProps> = ({
 
   const totalOutput = colony.getPowerOutput();
   const powerUsageEff = galaxy.getPowerUsageEff(colony) * 100;
+
+  const canExpandPowerPlant = galaxy.canExpandPowerPlant(colony);
 
   return (
     <>
@@ -53,7 +52,10 @@ const ColonyDetails: React.FC<ColonyDetailsProps> = ({
             Usage: {totalUsage}/{totalOutput} (Eff.: {powerUsageEff.toFixed(2)}
             %)
           </span>
-          <ExpandButton onClick={expandPowerPlant} />
+          <ExpandButton
+            onClick={expandPowerPlant}
+            disabled={!canExpandPowerPlant}
+          />
           <PowerProducer
             powerPlanetLevel={powerPlanetLevel}
             fuelDemand={fuelDemand}
@@ -70,5 +72,3 @@ const ColonyDetails: React.FC<ColonyDetailsProps> = ({
     </>
   );
 };
-
-export default ColonyDetails;

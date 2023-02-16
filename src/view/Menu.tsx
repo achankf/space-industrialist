@@ -1,14 +1,14 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import MaterialIconButton from "../components/MaterialIconButton";
+import { MaterialIconButton } from "../components/MaterialIconButton";
 import { GameContext } from "../contexts/GameContext";
 import { SpeedContext } from "../contexts/SpeedContext";
 import { ViewContext } from "../contexts/ViewContext";
 import { TRADER_COST } from "../model";
 import { ViewKind } from "./constants/view";
 
-const Menu: React.FC = () => {
+export const Menu: React.FC = () => {
   const { game } = useContext(GameContext);
   const { setCurrentView } = useContext(ViewContext);
   const { isPaused, speedUp, slowDown, togglePause } = useContext(SpeedContext);
@@ -112,5 +112,3 @@ const StatsItem = styled.div`
   align-items: center;
   padding-right: 0.625rem;
 `;
-
-export default Menu;

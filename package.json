@@ -5,23 +5,24 @@
   "private": true,
   "homepage": "https://achankf.github.io/space-industrialist/",
   "dependencies": {
-    "dexie": "^3.0.3",
+    "dexie": "^3.2.3",
     "hammerjs": "^2.0.8",
-    "immutable": "^4.0.0-rc.12",
+    "immutable": "^4.2.4",
+    "lodash": "^4.17.21",
     "lz-string": "^1.4.4",
     "myalgo-ts": "^1.2.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-is": "^17.0.2",
-    "styled-components": "^5.2.3"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-is": "^18.2.0",
+    "styled-components": "^5.3.6"
   },
   "scripts": {
     "predeploy": "yarn build",
     "deploy": "gh-pages -d dist",
     "lint": "eslint --cache ./src",
-    "lint:fix": "eslint --cache --fix ./src",
-    "start": "webpack serve --mode=development",
-    "build": "webpack --mode=production",
+    "lint:fix": "eslint --cache --fix ./src && yarn prettier --cache --write ./src",
+    "start": "esbuild src/index.tsx --bundle --sourcemap --outfile=dist/index.js --servedir=dist --watch",
+    "build": "esbuild src/index.tsx --bundle --sourcemap --minify --outfile=dist/index.js",
     "test": "jest --coverage",
     "postinstall": "husky install"
   },
@@ -32,31 +33,25 @@
   "author": "Alfred Chan <alfred8844@gmail.com>",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@types/hammerjs": "^2.0.35",
-    "@types/jest": "^23.1.5",
+    "@types/hammerjs": "^2.0.41",
+    "@types/jest": "^29.4.0",
+    "@types/lodash": "^4.14.191",
     "@types/lz-string": "^1.3.34",
-    "@types/node": "^10.5.2",
-    "@types/react": "^16.4.6",
-    "@types/react-dom": "^16.0.6",
-    "@types/styled-components": "^5.1.3",
-    "@typescript-eslint/eslint-plugin": "^4.20.0",
-    "@typescript-eslint/parser": "^4.20.0",
-    "clean-webpack-plugin": "^3.0.0",
-    "eslint": "^7.23.0",
-    "eslint-config-prettier": "^8.1.0",
-    "eslint-plugin-prettier": "^3.3.1",
-    "eslint-plugin-react": "^7.23.1",
-    "eslint-plugin-simple-import-sort": "^7.0.0",
-    "gh-pages": "^3.1.0",
-    "html-webpack-plugin": "^5.3.1",
-    "husky": "^6.0.0",
-    "lint-staged": "^10.5.4",
-    "prettier": "^2.2.1",
-    "ts-loader": "^8.1.0",
-    "typescript": "^4.2.3",
-    "webpack": "^5.30.0",
-    "webpack-cli": "^4.6.0",
-    "webpack-dev-server": "^3.11.2"
+    "@types/node": "^18.13.0",
+    "@types/react": "17.0.43",
+    "@types/react-dom": "^18.0.11",
+    "@types/styled-components": "^5.1.26",
+    "@typescript-eslint/eslint-plugin": "^5.52.0",
+    "@typescript-eslint/parser": "^5.52.0",
+    "esbuild": "^0.17.8",
+    "eslint": "^8.34.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "gh-pages": "^5.0.0",
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.5"
   },
   "browserslist": {
     "production": [
@@ -69,8 +64,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "lint-staged": {
-    "*.ts": "yarn eslint --cache --fix"
   }
 }

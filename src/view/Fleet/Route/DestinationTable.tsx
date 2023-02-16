@@ -8,7 +8,10 @@ interface DestinationTableProps {
   game: Game;
 }
 
-const DestinationTable: React.FC<DestinationTableProps> = ({ fleet, game }) => {
+export const DestinationTable: React.FC<DestinationTableProps> = ({
+  fleet,
+  game,
+}) => {
   const galaxy = game.getReader();
   const route = fleet.getRoute();
   const at = fleet.getRouteAt();
@@ -42,5 +45,3 @@ const DestinationTable: React.FC<DestinationTableProps> = ({ fleet, game }) => {
     </table>
   );
 };
-
-export default DestinationTable;

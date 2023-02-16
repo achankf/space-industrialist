@@ -9,7 +9,7 @@ interface MarketProps {
   colony: Colony;
 }
 
-const MarketPanel: React.FC<MarketProps> = ({ colony }) => {
+export const Market: React.FC<MarketProps> = ({ colony }) => {
   const { game } = useContext(GameContext);
 
   const galaxy = game.getReader();
@@ -60,5 +60,3 @@ Finally, you want to overproduce goods that are used to maintain civilian & indu
     </table>
   );
 };
-
-export default MarketPanel;

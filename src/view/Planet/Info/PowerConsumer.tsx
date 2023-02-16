@@ -5,7 +5,8 @@ interface PowerConsumerProps {
   traderUsage: number;
   civUsage: number;
 }
-const PowerConsumer: React.FC<PowerConsumerProps> = ({
+
+export const PowerConsumer: React.FC<PowerConsumerProps> = ({
   industrialUsage,
   traderUsage,
   civUsage,
@@ -32,5 +33,3 @@ const PowerConsumer: React.FC<PowerConsumerProps> = ({
     </fieldset>
   );
 };
-
-export default PowerConsumer;

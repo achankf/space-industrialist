@@ -1,11 +1,12 @@
 import LZString from "lz-string";
 import React, { createRef, useContext, useState } from "react";
 
-import TitleBar from "../components/TitleBar";
-import Window from "../components/Window";
+import { TitleBar } from "../components/TitleBar";
+import { Window } from "../components/Window";
 import { GameContext } from "../contexts/GameContext";
 import { ViewContext } from "../contexts/ViewContext";
 import { Game, ISaveData } from "../game";
+import { UnreachableError } from "../utils/UnreachableError";
 import { BaseViewProps, ViewKind } from "./constants/view";
 
 function toSave(game: Game) {
@@ -38,15 +39,20 @@ function fromSave(input: string) {
 
 export type ImportExportProps = BaseViewProps;
 
-const ImportExport: React.FC<ImportExportProps> = ({ viewId: id }) => {
+export const ImportExport: React.FC<ImportExportProps> = ({ viewId: id }) => {
   const { game } = useContext(GameContext);
   const { setCurrentView } = useContext(ViewContext);
   const [saveData, setSaveData] = useState(() => toSave(game));
   const textareaRef = createRef<HTMLTextAreaElement>();
 
   function copySave() {
-    textareaRef.current?.select();
-    document.execCommand("Copy");
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      throw new UnreachableError("cannot find reference to the save textarea");
+    }
+    textarea.select();
+    navigator.clipboard.writeText(textarea.value);
   }
 
   async function importSave() {
@@ -85,5 +91,3 @@ const ImportExport: React.FC<ImportExportProps> = ({ viewId: id }) => {
     </Window>
   );
 };
-
-export default ImportExport;

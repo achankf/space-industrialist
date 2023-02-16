@@ -1,7 +1,6 @@
-import * as Immutable from "immutable";
 import { average, sum, toIt } from "myalgo-ts";
 
-import assert from "../utils/assert";
+import { assert } from "../utils/assert";
 import { YEAR_PER_TICK } from ".";
 import { Galaxy } from "./galaxy";
 import { Industry } from "./industry";
@@ -218,9 +217,7 @@ export class Colony {
     return Math.round(this.population * 10);
   }
 
-  public getTotalPowerUsage(
-    galaxy: Galaxy
-  ): {
+  public getTotalPowerUsage(galaxy: Galaxy): {
     industrialUsage: number;
     traderUsage: number;
     civUsage: number;
@@ -319,7 +316,7 @@ export class Colony {
 
     for (const industry of industries) {
       const prodCap = industry.prodCap(galaxy);
-      Immutable.Seq(Industry.getDemandProducts(industry.productType))
+      [...Industry.getDemandProducts(industry.productType)]
         .map((x) => {
           return {
             neededKinds: x,

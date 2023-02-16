@@ -3,7 +3,7 @@ import { add, subtract, Vec2D } from "myalgo-ts";
 import { getMapCanvas } from "./constants";
 import { MapUIState } from "./reducer/state";
 
-export default class CoorCalculator {
+export class CoorCalculator {
   private canvas = getMapCanvas();
   constructor(private state: MapUIState) {}
 

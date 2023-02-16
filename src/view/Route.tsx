@@ -1,12 +1,12 @@
 import React, { useContext } from "react";
 
-import ContentPanel from "../components/ContentPanel";
-import TitleBar from "../components/TitleBar";
-import Window from "../components/Window";
+import { ContentPanel } from "../components/ContentPanel";
+import { TitleBar } from "../components/TitleBar";
+import { Window } from "../components/Window";
 import { GameContext } from "../contexts/GameContext";
 import { Game } from "../game";
 import { IRouteSegment as RouteSegment } from "../model";
-import assert from "../utils/assert";
+import { assert } from "../utils/assert";
 import { BaseViewProps } from "./constants/view";
 
 export function routeString(game: Game, route: RouteSegment): string {
@@ -30,7 +30,7 @@ function arrow(left: number, right: number) {
   return `${left} ⇆ ${right}`;
 }
 
-const Route: React.FC<RouteProps> = ({ viewId, route }) => {
+export const Route: React.FC<RouteProps> = ({ viewId, route }) => {
   const { game } = useContext(GameContext);
   const galaxyReader = game.getReader();
   const galaxyWriter = game.getWriter();
@@ -109,5 +109,3 @@ const Route: React.FC<RouteProps> = ({ viewId, route }) => {
     </Window>
   );
 };
-
-export default Route;

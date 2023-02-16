@@ -4,14 +4,14 @@ import { useContext } from "react";
 import { GameContext } from "../../../contexts/GameContext";
 import { ViewContext } from "../../../contexts/ViewContext";
 import { Fleet } from "../../../model/fleet";
-import DestinationTable from "./DestinationTable";
+import { DestinationTable } from "./DestinationTable";
 
 interface RouteProps {
   viewId: symbol;
   fleet: Fleet;
 }
 
-const Route: React.FC<RouteProps> = ({ viewId, fleet }) => {
+export const Route: React.FC<RouteProps> = ({ viewId, fleet }) => {
   const { game } = useContext(GameContext);
   const { closeView } = useContext(ViewContext);
   const galaxy = game.getReader();
@@ -45,5 +45,3 @@ const Route: React.FC<RouteProps> = ({ viewId, fleet }) => {
     </div>
   );
 };
-
-export default Route;

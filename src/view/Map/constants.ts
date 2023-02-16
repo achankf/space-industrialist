@@ -1,4 +1,4 @@
-import Bug from "../../utils/UnreachableError";
+import { UnreachableError } from "../../utils/UnreachableError";
 
 export const MIN_GRID_SIZE = 50;
 export const MAX_GRID_SIZE = 300;
@@ -12,7 +12,7 @@ export function getMapCanvas(): HTMLCanvasElement {
     .getElementsByTagName("canvas")
     .namedItem(MAP_CANVAS_ID);
   if (!canvas) {
-    throw new Bug("map canvas not setup properly");
+    throw new UnreachableError("map canvas not setup properly");
   }
   return canvas;
 }

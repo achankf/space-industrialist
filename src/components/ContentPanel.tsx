@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export default styled.div`
+export const ContentPanel = styled.div`
   max-height: 70vh;
   max-width: 70vw;
   overflow: auto;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import noOp from "../utils/noOp";
+import { noOp } from "../utils/noOp";
 
 const FREQUENCY_RATE = 20;
 
@@ -28,7 +28,9 @@ export const SpeedContext = React.createContext<SpeedContextType>({
   slowDown: noOp,
 });
 
-export const SpeedContextProvider: React.FC = ({ children }) => {
+export const SpeedContextProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [period, setPeriod] = useState(50);
   const [isPaused, setPause] = useState(true);
 

@@ -1,4 +1,3 @@
-import * as Immutable from "immutable";
 import {
   add,
   combine,
@@ -17,9 +16,9 @@ import {
   uniq,
 } from "myalgo-ts";
 
-import assert from "../utils/assert";
-import getOrThrow from "../utils/getOrThrow";
-import Bug from "../utils/UnreachableError";
+import { assert } from "../utils/assert";
+import { getOrThrow } from "../utils/getOrThrow";
+import { UnreachableError } from "../utils/UnreachableError";
 import {
   ANNUAL_INTEREST,
   CoorT,
@@ -59,9 +58,7 @@ export interface IGalaxySaveData {
 }
 
 function toMap<T extends IEntity>(it: Iterable<T>): Map<number, T> {
-  return new Map(
-    Immutable.Seq(it).map((v): [number, T] => [v.id, v] as [number, T])
-  );
+  return new Map([...it].map((v) => [v.id, v]));
 }
 
 /** Use this comparator for SortedTrie */
@@ -80,7 +77,7 @@ export class Galaxy {
     const coors = toMap(saveData.locatables);
 
     const inventories = toMap(
-      Immutable.Seq(saveData.allInventories).map(
+      [...saveData.allInventories].map(
         (x): Inventory =>
           new Inventory(
             x.id,
@@ -91,54 +88,50 @@ export class Galaxy {
     );
 
     const planets = toMap(
-      Immutable.Seq(saveData.allPlanets).map(
-        (x): Planet => new Planet(x.id, x.resource)
-      )
+      [...saveData.allPlanets].map((x): Planet => new Planet(x.id, x.resource))
     );
 
     for (const planet of planets.values()) {
       const coor = coors.get(planet.id);
       if (!coor) {
-        throw new Bug("coor not found");
+        throw new UnreachableError("coor not found");
       }
       galaxy.addObj(planet, coor.coor);
     }
 
     const colonies = toMap(
-      saveData.allColonies.map(
-        (x): Colony => {
-          const playerInventory = getOrThrow(
-            inventories,
-            x.playerInventoryId,
-            "bug: playerInventory not found"
-          );
-          const marketInventory = getOrThrow(
-            inventories,
-            x.marketInventoryId,
-            "bug: marketInventory not found"
-          );
-          const homePlanet = getOrThrow(
-            planets,
-            x.homePlanetId,
-            "bug: homePlanet not found"
-          );
-          const colony = new Colony(
-            x.id,
-            homePlanet,
-            x.population,
-            playerInventory,
-            marketInventory,
-            x.maxPopulation,
-            x.isLockPopulation,
-            x.powerPlanetLevel,
-            x.powerOutputEff,
-            x.foodHappiness,
-            x.luxuryHappiness,
-            x.commonHappiness
-          );
-          return colony;
-        }
-      )
+      saveData.allColonies.map((x): Colony => {
+        const playerInventory = getOrThrow(
+          inventories,
+          x.playerInventoryId,
+          "bug: playerInventory not found"
+        );
+        const marketInventory = getOrThrow(
+          inventories,
+          x.marketInventoryId,
+          "bug: marketInventory not found"
+        );
+        const homePlanet = getOrThrow(
+          planets,
+          x.homePlanetId,
+          "bug: homePlanet not found"
+        );
+        const colony = new Colony(
+          x.id,
+          homePlanet,
+          x.population,
+          playerInventory,
+          marketInventory,
+          x.maxPopulation,
+          x.isLockPopulation,
+          x.powerPlanetLevel,
+          x.powerOutputEff,
+          x.foodHappiness,
+          x.luxuryHappiness,
+          x.commonHappiness
+        );
+        return colony;
+      })
     );
 
     colonies.forEach((colony): void => {
@@ -148,33 +141,29 @@ export class Galaxy {
 
     // add industries
     saveData.allIndustries
-      .map(
-        (x): Industry => {
-          const colony = getOrThrow(
-            colonies,
-            x.colonyId,
-            "bug: colony not found"
-          );
-          const industry = new Industry(
-            x.id,
-            x.productType,
-            colony,
-            x.scale,
-            x.operationalEff
-          );
-          return industry;
-        }
-      )
+      .map((x): Industry => {
+        const colony = getOrThrow(
+          colonies,
+          x.colonyId,
+          "bug: colony not found"
+        );
+        const industry = new Industry(
+          x.id,
+          x.productType,
+          colony,
+          x.scale,
+          x.operationalEff
+        );
+        return industry;
+      })
       .forEach((industry): void => galaxy.addIndustryHelper(industry));
 
     saveData.allFleets.forEach((x): void => {
       const cargo = getOrThrow(inventories, x.cargoId, "bug: cargo not found");
-      const route = x.route.map(
-        (id): Colony => {
-          const ret = getOrThrow(colonies, id, "bug: colony not found");
-          return ret;
-        }
-      );
+      const route = x.route.map((id): Colony => {
+        const ret = getOrThrow(colonies, id, "bug: colony not found");
+        return ret;
+      });
       const fleet = new Fleet(
         x.id,
         cargo,
@@ -243,41 +232,52 @@ export class Galaxy {
   private numTraders = 10;
 
   public serialize(): IGalaxySaveData {
-    return {
-      allColonies: this.colonies.map((x): IColony => x.serialize()),
-      allFleets: combine(...this.tradeFleets.values())
-        .map((x): IFleet => x.serialize())
-        .collect(),
-      allIndustries: combine(...this.colonyIndustries.values())
-        .map((industry): IIndustry => industry.serialize())
-        .collect(),
-      allInventories: this.colonies
-        .reduce((acc, x): Inventory[] => {
-          acc.push(x.getPlayerInventory());
-          acc.push(x.getMarketInventory());
-          return acc;
-        }, [] as Inventory[])
-        .concat(
-          ...combine(...this.tradeFleets.values()).map(
-            (x): Inventory => x.getCargo()
-          )
+    const allColonies = this.colonies.map((x): IColony => x.serialize());
+
+    const allFleets = combine(...this.tradeFleets.values())
+      .map((x): IFleet => x.serialize())
+      .collect();
+
+    const allIndustries = combine(...this.colonyIndustries.values())
+      .map((industry): IIndustry => industry.serialize())
+      .collect();
+
+    const allInventories = this.colonies
+      .reduce((acc, x): Inventory[] => {
+        acc.push(x.getPlayerInventory());
+        acc.push(x.getMarketInventory());
+        return acc;
+      }, [] as Inventory[])
+      .concat(
+        ...combine(...this.tradeFleets.values()).map(
+          (x): Inventory => x.getCargo()
         )
-        .map((x): IInventory => x.serialize()),
-      allPlanets: Immutable.Seq(this.locatableCoors.keys())
-        .filter((x): boolean => x.kind === MapDataKind.Planet)
-        .map((x): IPlanet => (x as Planet).serialize())
-        .toArray(),
-      genId: this.genId,
-      locatables: Immutable.Seq(this.locatableCoors)
-        .map(([obj, coor]): ILocatable & ICoor => {
-          return { id: obj.id, kind: obj.kind, coor } as ILocatable & ICoor;
-        })
-        .toArray(),
-      money: this.money,
-      numColonists: this.numColonists,
-      numTraders: this.numTraders,
-      timestamp: this.timestamp,
-      turnCounter: this.turnCounter,
+      )
+      .map((x): IInventory => x.serialize());
+
+    const allPlanets = [...this.locatableCoors.keys()]
+      .filter((x): boolean => x.kind === MapDataKind.Planet)
+      .map((x): IPlanet => (x as Planet).serialize());
+
+    const locatables = [...this.locatableCoors].map(
+      ([obj, coor]): ILocatable & ICoor => {
+        return { id: obj.id, kind: obj.kind, coor } as ILocatable & ICoor;
+      }
+    );
+
+    return {
+      allColonies,
+      allFleets,
+      allIndustries,
+      allInventories,
+      allPlanets,
+      locatables,
+      genId: structuredClone(this.genId),
+      money: structuredClone(this.money),
+      numColonists: structuredClone(this.numColonists),
+      numTraders: structuredClone(this.numTraders),
+      timestamp: structuredClone(this.timestamp),
+      turnCounter: structuredClone(this.turnCounter),
     } as IGalaxySaveData;
   }
 
@@ -401,12 +401,14 @@ export class Galaxy {
     assert(industries !== undefined);
 
     // get depended products for all industries except the target
-    const overall = Immutable.Seq(industries)
+    const overall = [...industries]
       .filter((industry2) => industry2 !== industry)
-      .reduce(
-        (acc, industry2) => acc.union(this.getDemandedProducts(industry2)),
-        Immutable.Set<Product>()
-      );
+      .reduce((acc, industry2) => {
+        this.getDemandedProducts(industry2).forEach((product) =>
+          acc.add(product)
+        );
+        return acc;
+      }, new Set<Product>());
     const depend = this.getDemandedProducts(industry);
 
     for (const product of depend.subtract(overall)) {
@@ -436,7 +438,7 @@ export class Galaxy {
   }
 
   public calCenter(): [number, number] {
-    const [minX, minY, maxX, maxY] = Immutable.Seq(this.locatableCoors)
+    const [minX, minY, maxX, maxY] = [...this.locatableCoors]
       .filter(([locatable]) => locatable.kind === MapDataKind.Planet)
       .map(([, coor]) => coor)
       .reduce(
@@ -549,17 +551,20 @@ export class Galaxy {
   }
 
   public getObj(at: CoorT, kind: MapDataKind.Planet): ILocatable | undefined {
-    return this.searchNearbyObjs(at)
-      .filter((x) => x.kind === kind)
-      .first() as ILocatable | undefined;
+    for (const x of this.searchNearbyObjs(at)) {
+      if (x.kind === kind) {
+        return x;
+      }
+    }
+    return undefined;
   }
 
   public searchNearbyObjs(
     at: CoorT,
     radius = 0,
     minDistance = 0
-  ): Immutable.Set<ILocatable | IRouteSegment> {
-    const searchObs = (): Immutable.Set<ILocatable> => {
+  ): Set<ILocatable | IRouteSegment> {
+    const searchObs = (): Set<ILocatable> => {
       const [atX, atY] = at;
       const possibleCoors: CoorT[] = [
         at, // center
@@ -572,19 +577,30 @@ export class Galaxy {
       const sorted = possibleCoors
         .map((coor): CoorT => this.idxCoor(coor))
         .sort(compare);
-      return uniq(sorted, compare) // find uniq elements from a sorted collection
-        .map((coor) => Immutable.Set(this.getIdx(coor))) // extra objects from coordinates
-        .reduce((acc, cur) => acc.union(cur), Immutable.Set<ILocatable>()) // flatten collections
-        .filter((obj) => {
+
+      const locatableSet = uniq(sorted, compare) // find uniq elements from a sorted collection
+        // .map((coor) => new Set(this.getIdx(coor))) // extra objects from coordinates
+        .reduce((acc, cur) => {
+          this.getIdx(cur).forEach((idx) => acc.add(idx));
+
+          return acc;
+        }, new Set<ILocatable>()); // flatten collections
+
+      return new Set(
+        [...locatableSet].filter((obj) => {
           const coor = this.getCoor(obj);
           const dist = distance(coor, at);
           return dist >= minDistance && dist <= radius;
-        });
+        })
+      );
     };
 
-    const routes = this.searchTradeRoutes(at, radius);
-    const objs = searchObs();
-    return objs.concat(routes);
+    const objs: Set<ILocatable | IRouteSegment> = searchObs();
+    for (const route of this.searchTradeRoutes(at, radius)) {
+      objs.add(route);
+    }
+
+    return objs;
   }
 
   public move(
@@ -689,7 +705,7 @@ export class Galaxy {
     const ret = this.tradeRoutePaths.next(from, to);
     if (!ret) {
       // since we're dealing with the minimum spanning tree of a complete undirected graph, all vertices are reachable
-      throw new Bug("all vertices should be reachable");
+      throw new UnreachableError("all vertices should be reachable");
     }
     return ret;
   }

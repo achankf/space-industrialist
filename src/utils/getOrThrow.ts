@@ -2,7 +2,7 @@ interface Collection<K, V> {
   get(key: K): V | undefined;
 }
 
-export default function <K, V>(
+export function getOrThrow<K, V>(
   collection: Collection<K, V>,
   key: K,
   elseErrorMsg: string

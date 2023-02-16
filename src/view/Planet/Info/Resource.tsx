@@ -6,7 +6,7 @@ interface ResourceProps {
   resource: Product;
 }
 
-const Resource: React.FC<ResourceProps> = ({ resource }) => {
+export const Resource: React.FC<ResourceProps> = ({ resource }) => {
   return (
     <tr title="This is the type of resource that this planet can produce locally.">
       <td>Resource</td>
@@ -14,5 +14,3 @@ const Resource: React.FC<ResourceProps> = ({ resource }) => {
     </tr>
   );
 };
-
-export default Resource;

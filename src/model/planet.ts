@@ -1,4 +1,4 @@
-import Bug from "../utils/UnreachableError";
+import { UnreachableError } from "../utils/UnreachableError";
 import { ILocatable, MapDataKind } from ".";
 import { Colony } from "./colony";
 import { RawMaterial } from "./product";
@@ -34,7 +34,9 @@ export class Planet implements ILocatable {
 
   public getColony(): Colony {
     if (!this.colony) {
-      throw new Bug("this method should be called for colonized planets");
+      throw new UnreachableError(
+        "this method should be called for colonized planets"
+      );
     }
     return this.colony;
   }

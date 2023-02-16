@@ -1,3 +1,3 @@
-export default function noOp(): void {
+export function noOp(): void {
   // no op
 }

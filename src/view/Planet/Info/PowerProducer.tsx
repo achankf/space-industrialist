@@ -6,7 +6,8 @@ interface PowerProducerProps {
   powerOutput: number;
   energyPrice: number;
 }
-const PowerProducer: React.FC<PowerProducerProps> = ({
+
+export const PowerProducer: React.FC<PowerProducerProps> = ({
   powerPlanetLevel,
   fuelDemand,
   powerOutput,
@@ -38,5 +39,3 @@ const PowerProducer: React.FC<PowerProducerProps> = ({
     </fieldset>
   );
 };
-
-export default PowerProducer;

@@ -1,11 +1,14 @@
 import { Reducer } from "react";
 
 import { MAX_GRID_SIZE, MIN_GRID_SIZE } from "../constants";
-import CoorCalculator from "../CoorCalculator";
+import { CoorCalculator } from "../CoorCalculator";
 import { ZoomAction } from "./action";
 import { MapUIState } from "./state";
 
-const zoomReducer: Reducer<MapUIState, ZoomAction> = (prevState, action) => {
+export const zoomReducer: Reducer<MapUIState, ZoomAction> = (
+  prevState,
+  action
+) => {
   const { gridSize } = prevState;
   const { center, isZoomingIn, speed } = action;
   const newGridSize = isZoomingIn
@@ -25,5 +28,3 @@ const zoomReducer: Reducer<MapUIState, ZoomAction> = (prevState, action) => {
     animationAction: newAction,
   };
 };
-
-export default zoomReducer;

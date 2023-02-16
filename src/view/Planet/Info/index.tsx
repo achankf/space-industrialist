@@ -3,17 +3,17 @@ import React, { useContext } from "react";
 import { GameContext } from "../../../contexts/GameContext";
 import { POWER_PLANT_COST } from "../../../model";
 import { Planet } from "../../../model/planet";
-import assert from "../../../utils/assert";
-import ColonizeButton from "./ColonizeButton";
-import ColonyDetails from "./ColonyDetails";
-import Coor from "./Coor";
-import Resource from "./Resource";
+import { assert } from "../../../utils/assert";
+import { ColonizeButton } from "./ColonizeButton";
+import { ColonyDetails } from "./ColonyDetails";
+import { Coor } from "./Coor";
+import { Resource } from "./Resource";
 
 interface InfoProps {
   planet: Planet;
 }
 
-const Info: React.FC<InfoProps> = ({ planet }) => {
+export const Info: React.FC<InfoProps> = ({ planet }) => {
   const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const resource = planet.resource;
@@ -33,7 +33,7 @@ const Info: React.FC<InfoProps> = ({ planet }) => {
     galaxy.colonizePlanet(planet, initialPop);
   }
 
-  function expandPowerPlant(e: React.MouseEvent<HTMLButtonElement>) {
+  const expandPowerPlant = (e: React.MouseEvent<HTMLButtonElement>) => {
     const galaxy = game.getWriter();
 
     assert(planet.isColonized()); // can't have a power plant on a uncolonized planet
@@ -49,7 +49,7 @@ const Info: React.FC<InfoProps> = ({ planet }) => {
       galaxy.expandPowerPlant(colony);
       galaxy.withdraw(POWER_PLANT_COST);
     }
-  }
+  };
 
   return (
     <table>
@@ -65,5 +65,3 @@ const Info: React.FC<InfoProps> = ({ planet }) => {
     </table>
   );
 };
-
-export default Info;

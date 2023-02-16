@@ -7,10 +7,10 @@ import { Fleet as FleetModel } from "../../../model/fleet";
 import { Planet as PlanetModel } from "../../../model/planet";
 import { ViewKind } from "../../constants/view";
 import { RADIUS } from "../constants";
-import CoorCalculator from "../CoorCalculator";
+import { CoorCalculator } from "../CoorCalculator";
 import { MapUIState } from "../reducer/state";
 
-export default function (
+export function handleSingleTapHelper(
   galaxy: GalaxyReadProxy,
   state: MapUIState,
   setCurrentView: ViewContextType["setCurrentView"],
@@ -21,7 +21,7 @@ export default function (
   const coor: Vec2D = [e.center.x - bb.left, e.center.y - bb.top];
   const gameCoor = coorCalculator.toGameCoor(coor);
 
-  const nearbyObjs = galaxy.searchNearbyObjs(gameCoor, RADIUS).toArray();
+  const nearbyObjs = [...galaxy.searchNearbyObjs(gameCoor, RADIUS)];
   switch (nearbyObjs.length) {
     case 0:
       break;

@@ -5,7 +5,8 @@ import { GameContext } from "../../../contexts/GameContext";
 interface ColonizeButtonProps {
   colonize: () => void;
 }
-const ColonizeButton: React.FC<ColonizeButtonProps> = ({ colonize }) => {
+
+export const ColonizeButton: React.FC<ColonizeButtonProps> = ({ colonize }) => {
   const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const isDisabled = galaxy.getNumColonists() < 1;
@@ -20,5 +21,3 @@ const ColonizeButton: React.FC<ColonizeButtonProps> = ({ colonize }) => {
     </tr>
   );
 };
-
-export default ColonizeButton;

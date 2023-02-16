@@ -9,7 +9,9 @@ interface IndustryDetailsProps {
   industry: Industry;
 }
 
-const IndustryDetails: React.FC<IndustryDetailsProps> = ({ industry }) => {
+export const IndustryDetails: React.FC<IndustryDetailsProps> = ({
+  industry,
+}) => {
   const { game } = useContext(GameContext);
   const galaxy = game.getReader();
   const industryScale = industry.getScale();
@@ -44,5 +46,3 @@ const IndustryDetails: React.FC<IndustryDetailsProps> = ({ industry }) => {
     </div>
   );
 };
-
-export default IndustryDetails;

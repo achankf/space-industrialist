@@ -42,4 +42,4 @@ const globalCss = css`
   }
 `;
 
-export default createGlobalStyle`${globalCss}`;
+export const GlobalStyle = createGlobalStyle`${globalCss}`;

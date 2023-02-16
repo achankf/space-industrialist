@@ -5,7 +5,8 @@ import { Colony } from "../../../model/colony";
 interface EncourageGrowthProps {
   colony: Colony;
 }
-const EncourageGrowth: React.FC<EncourageGrowthProps> = ({ colony }) => {
+
+export const EncourageGrowth: React.FC<EncourageGrowthProps> = ({ colony }) => {
   const change = (event: React.ChangeEvent<HTMLInputElement>) =>
     colony.lockPopulation(!event.target.checked);
 
@@ -22,5 +23,3 @@ const EncourageGrowth: React.FC<EncourageGrowthProps> = ({ colony }) => {
     </tr>
   );
 };
-
-export default EncourageGrowth;

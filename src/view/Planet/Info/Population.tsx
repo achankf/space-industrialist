@@ -7,7 +7,7 @@ interface PopulationProps {
   max: number;
 }
 
-const Population: React.FC<PopulationProps> = ({
+export const Population: React.FC<PopulationProps> = ({
   num,
   max,
 }: {
@@ -25,5 +25,3 @@ const Population: React.FC<PopulationProps> = ({
     </tr>
   );
 };
-
-export default Population;

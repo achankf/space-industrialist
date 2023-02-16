@@ -1,15 +1,15 @@
 import * as React from "react";
 
-import ContentPanel from "../components/ContentPanel";
-import TitleBar from "../components/TitleBar";
-import Window from "../components/Window";
+import { ContentPanel } from "../components/ContentPanel";
+import { TitleBar } from "../components/TitleBar";
+import { Window } from "../components/Window";
 import { Product } from "../model/product";
 import { BASIC_GOODS, LUXURY_GOODS } from "./constants/product";
 import { BaseViewProps } from "./constants/view";
 
 type TutorialProps = BaseViewProps;
 
-const Tutorial: React.FC<TutorialProps> = ({ viewId: id }) => {
+export const Tutorial: React.FC<TutorialProps> = ({ viewId: id }) => {
   return (
     <Window>
       <TitleBar viewId={id} title="Tutorial" />
@@ -92,5 +92,3 @@ const Tutorial: React.FC<TutorialProps> = ({ viewId: id }) => {
     </Window>
   );
 };
-
-export default Tutorial;
