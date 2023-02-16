@@ -23,8 +23,7 @@
     "lint:fix": "eslint --cache --fix ./src && yarn prettier --cache --write ./src",
     "start": "esbuild src/index.tsx --bundle --sourcemap --outfile=dist/index.js --servedir=dist --watch",
     "build": "esbuild src/index.tsx --bundle --sourcemap --minify --outfile=dist/index.js",
-    "test": "jest --coverage",
-    "postinstall": "husky install"
+    "test": "jest --coverage"
   },
   "eslintConfig": {
     "extends": "react-app"
